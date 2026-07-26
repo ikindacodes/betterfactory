@@ -1,5 +1,13 @@
 export { installFactory, writeFactory, resolveTargetDir } from "./install.js";
 export { runWizard, type WizardFlags } from "./wizard.js";
+export {
+  copyEnvExample,
+  detectPackageManager,
+  runDependencyInstall,
+  installCommand,
+  devCommand,
+  isPackageManager,
+} from "./package-manager.js";
 
 export type {
   ChannelId,
@@ -10,6 +18,7 @@ export type {
   ModuleRecipe,
   StackConfig,
   WorkItemStoreId,
+  PackageManagerId,
 } from "./modules/types.js";
 
 export {

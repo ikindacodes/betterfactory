@@ -12,20 +12,30 @@ npx create-betterfactory@latest
 
 ## Quick start
 
+After scaffolding, the CLI **copies `.env.example` → `.env`** and runs **dependency install** with your package manager (auto-detected from `pnpm create` / `yarn create` / `bunx`, or chosen in the wizard / via `--pm`).
+
 ```bash
-# Interactive wizard
+# Interactive wizard (asks for package manager)
 npx create-betterfactory@latest
 
-# Non-interactive defaults (GitHub Issues store, new directory)
+# Non-interactive defaults (GitHub Issues store, new directory, npm install)
 npx create-betterfactory@latest my-factory -y
 
-# Markdown Work Item store, dry-run (print files only)
+# Prefer pnpm
+npx create-betterfactory@latest my-factory -y --pm pnpm
+# or
+pnpm create betterfactory@latest my-factory -y
+
+# Markdown Work Item store, dry-run (print files only — no write/install)
 npx create-betterfactory@latest my-factory -y --store markdown --dry-run
 
 # Into an existing monorepo
 npx create-betterfactory@latest my-factory -y \
   --install in-place \
   --package-path apps/my-factory
+
+# Scaffold files only
+npx create-betterfactory@latest my-factory -y --skip-install --skip-env
 ```
 
 ### Package managers
@@ -45,8 +55,11 @@ bun create create-betterfactory@latest
 | `-y, --yes` | Non-interactive defaults |
 | `--store <store>` | `github` (default), `linear`, or `markdown` |
 | `--channel <list>` | Extra channels, comma-separated (e.g. `slack`) |
-| `--install <mode>` | `new` (default) or `in-place` |
+| `--install <mode>` | Scaffold mode: `new` (default) or `in-place` |
 | `--package-path <path>` | Path for in-place install (default `apps/<name>`) |
+| `--pm <pm>` | `npm` \| `pnpm` \| `yarn` \| `bun` (auto-detect if omitted) |
+| `--skip-install` | Do not run dependency install |
+| `--skip-env` | Do not copy `.env.example` → `.env` |
 | `--force` | Overwrite an existing `agent/` tree |
 | `--dry-run` | Compose stack and list files without writing |
 | `--list-modules` | List Module catalog and exit |
@@ -67,9 +80,8 @@ After scaffolding:
 
 ```bash
 cd my-factory   # or your --package-path
-cp .env.example .env
-pnpm install    # or npm / yarn / bun
-pnpm dev        # eve TUI
+# .env is already created — add AI_GATEWAY_API_KEY (and store creds)
+pnpm dev        # or npm run dev / yarn dev / bun run dev
 ```
 
 ## Programmatic use

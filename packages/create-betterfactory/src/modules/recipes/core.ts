@@ -119,11 +119,11 @@ This factory turns intent into **Work Items** (not application code) and gates t
 
 ## Quick start
 
+\`create-betterfactory\` already copied \`.env.example\` → \`.env\` and ran install when you scaffolded. Finish setup:
+
 \`\`\`bash
-cp .env.example .env
-# Add AI_GATEWAY_API_KEY (and Store credentials)
-pnpm install   # or npm install
-pnpm dev       # eve dev — TUI
+# Fill in AI_GATEWAY_API_KEY (and Store credentials) in .env
+pnpm dev       # or: npm run dev / yarn dev / bun run dev
 \`\`\`
 
 ## Ownership

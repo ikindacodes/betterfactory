@@ -6,6 +6,10 @@ import type {
   StackConfig,
   WorkItemStoreId,
 } from "./modules/types.js";
+import {
+  detectPackageManager,
+  type PackageManager,
+} from "./package-manager.js";
 
 export interface WizardFlags {
   name?: string;
@@ -15,6 +19,11 @@ export interface WizardFlags {
   install?: InstallMode;
   packagePath?: string;
   force?: boolean;
+  packageManager?: PackageManager;
+  /** When false, skip dependency install (still may set packageManager). */
+  runInstall?: boolean;
+  /** Prompt for package manager in interactive mode. */
+  askPackageManager?: boolean;
 }
 
 function assertNotCancel<T>(value: T | symbol): T {
@@ -26,6 +35,8 @@ function assertNotCancel<T>(value: T | symbol): T {
 }
 
 export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
+  const detected = detectPackageManager(flags.packageManager);
+
   if (flags.yes) {
     const name = flags.name ?? "my-factory";
     const channels: ChannelId[] = ["eve"];
@@ -41,6 +52,7 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
       store: flags.store ?? "github",
       channels,
       packagePath: flags.packagePath,
+      packageManager: detected,
     };
   }
 
@@ -134,11 +146,28 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
   const channels: ChannelId[] = ["eve"];
   if (slack) channels.push("slack");
 
+  let packageManager: PackageManager = detected;
+  if (flags.runInstall !== false && flags.askPackageManager !== false) {
+    packageManager = assertNotCancel(
+      await p.select({
+        message: "Package manager",
+        initialValue: detected,
+        options: [
+          { value: "npm" as const, label: "npm", hint: detected === "npm" ? "detected" : undefined },
+          { value: "pnpm" as const, label: "pnpm", hint: detected === "pnpm" ? "detected" : undefined },
+          { value: "yarn" as const, label: "yarn", hint: detected === "yarn" ? "detected" : undefined },
+          { value: "bun" as const, label: "bun", hint: detected === "bun" ? "detected" : undefined },
+        ],
+      }),
+    );
+  }
+
   return {
     name,
     installMode,
     store,
     channels,
     packagePath,
+    packageManager,
   };
 }

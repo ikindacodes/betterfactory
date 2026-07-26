@@ -77,6 +77,14 @@ export function buildCreateCommand(
     parts.push("--channel", shellQuote(extras.join(",")));
   }
 
+  // Prefer explicit --pm when Stack Builder / caller chose a PM
+  // (even npm — keeps the generated command faithful).
+  if (options.packageManager) {
+    parts.push("--pm", options.packageManager);
+  } else if (stack.packageManager) {
+    parts.push("--pm", stack.packageManager);
+  }
+
   return parts.join(" ");
 }
 

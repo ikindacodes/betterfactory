@@ -5,6 +5,8 @@ export type ChannelId = "eve" | "slack";
 
 export type InstallMode = "new" | "in-place";
 
+export type PackageManagerId = "npm" | "pnpm" | "bun" | "yarn";
+
 export interface StackConfig {
   /** Package / directory name for the factory. */
   name: string;
@@ -14,6 +16,8 @@ export interface StackConfig {
   channels: ChannelId[];
   /** Relative path inside Target when using monorepo-friendly layout. */
   packagePath?: string;
+  /** Preferred package manager for post-scaffold install. */
+  packageManager?: PackageManagerId;
 }
 
 export interface ComposeContext {

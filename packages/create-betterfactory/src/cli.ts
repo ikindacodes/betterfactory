@@ -3,9 +3,23 @@ import { Command } from "commander";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import path from "node:path";
-import { listCatalog, composeStack, type WorkItemStoreId, type InstallMode } from "./modules/index.js";
+import {
+  listCatalog,
+  composeStack,
+  type WorkItemStoreId,
+  type InstallMode,
+} from "./modules/index.js";
 import { runWizard, type WizardFlags } from "./wizard.js";
 import { installFactory } from "./install.js";
+import {
+  copyEnvExample,
+  detectPackageManager,
+  devCommand,
+  installCommand,
+  isPackageManager,
+  runDependencyInstall,
+  type PackageManager,
+} from "./package-manager.js";
 
 const program = new Command();
 
@@ -27,12 +41,24 @@ program
   )
   .option(
     "--install <mode>",
-    "Install mode: new | in-place",
+    "Scaffold mode: new | in-place",
     "new",
   )
   .option(
     "--package-path <path>",
     "Path for in-place install (default apps/<name>)",
+  )
+  .option(
+    "--pm <pm>",
+    "Package manager: npm | pnpm | yarn | bun (default: auto-detect from pnpm/yarn/bun create)",
+  )
+  .option(
+    "--skip-install",
+    "Skip dependency install after scaffolding",
+  )
+  .option(
+    "--skip-env",
+    "Skip copying .env.example → .env",
   )
   .option("--force", "Overwrite an existing agent/ tree")
   .option("--dry-run", "Compose Stack and print files without writing")
@@ -62,9 +88,16 @@ program
       process.exit(1);
     }
 
-    const install = opts.install as InstallMode;
-    if (!["new", "in-place"].includes(install)) {
-      console.error(`Invalid --install: ${install}`);
+    const installMode = opts.install as InstallMode;
+    if (!["new", "in-place"].includes(installMode)) {
+      console.error(`Invalid --install: ${installMode}`);
+      process.exit(1);
+    }
+
+    if (opts.pm != null && !isPackageManager(String(opts.pm))) {
+      console.error(
+        `Invalid --pm: ${opts.pm}. Use npm | pnpm | yarn | bun.`,
+      );
       process.exit(1);
     }
 
@@ -73,9 +106,12 @@ program
       yes: Boolean(opts.yes),
       store,
       channel: opts.channel,
-      install,
+      install: installMode,
       packagePath: opts.packagePath,
       force: Boolean(opts.force),
+      packageManager: opts.pm as PackageManager | undefined,
+      runInstall: !opts.skipInstall,
+      askPackageManager: !opts.skipInstall && opts.pm == null && !opts.yes,
     };
 
     try {
@@ -103,16 +139,46 @@ program
       );
       s.stop(`Wrote ${files.length} files`);
 
+      if (!opts.skipEnv) {
+        s.start("Creating .env from .env.example…");
+        const wroteEnv = await copyEnvExample(targetDir);
+        s.stop(
+          wroteEnv
+            ? "Created .env (fill in API keys)"
+            : "Skipped .env (already exists or no .env.example)",
+        );
+      }
+
+      const pm = detectPackageManager(stack.packageManager ?? opts.pm);
+      let installOk = false;
+
+      if (!opts.skipInstall && flags.runInstall !== false) {
+        const { label } = installCommand(pm);
+        p.log.info(`Running ${label}…`);
+        try {
+          await runDependencyInstall(targetDir, pm);
+          installOk = true;
+          p.log.success(`Dependencies installed with ${pm}`);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          p.log.warn(
+            `Dependency install failed: ${message}\n` +
+              `Run \`${label}\` manually in the factory directory.`,
+          );
+        }
+      }
+
       const rel = path.relative(process.cwd(), targetDir) || ".";
-      p.note(
-        [
-          `cd ${rel}`,
-          "cp .env.example .env",
-          "pnpm install   # or npm install",
-          "pnpm dev       # eve TUI",
-        ].join("\n"),
-        "Next steps",
-      );
+      const nextSteps = [
+        `cd ${rel}`,
+        opts.skipEnv
+          ? "cp .env.example .env"
+          : "# Edit .env with your API keys",
+        installOk ? null : installCommand(pm).label,
+        `${devCommand(pm)}   # eve TUI`,
+      ].filter((line): line is string => line != null);
+
+      p.note(nextSteps.join("\n"), "Next steps");
       p.outro(
         pc.green("Software Factory ready.") +
           pc.dim(" You own it — plan Work Items, gate Ready for Handoff."),
