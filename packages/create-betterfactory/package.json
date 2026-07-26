@@ -1,7 +1,7 @@
 {
   "name": "create-betterfactory",
   "version": "0.0.6",
-  "description": "Scaffold an open-source eve Software Factory you own — composable like Better T-Stack",
+  "description": "Scaffold an open-source eve Software Factory you own \u2014 composable like Better T-Stack",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -27,8 +27,9 @@
     }
   },
   "files": [
-    "dist",
-    "README.md"
+    "LICENSE",
+    "README.md",
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",

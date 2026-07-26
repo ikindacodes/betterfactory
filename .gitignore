@@ -50,3 +50,8 @@ CONTEXT-MAP.md
 docs/adr/
 docs/publishing.md
 .scratch/
+
+# secrets
+.env
+.env.*
+!.env.example
