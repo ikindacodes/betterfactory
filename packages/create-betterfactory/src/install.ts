@@ -4,7 +4,7 @@ import {
   composeStack,
   type FileMap,
   type StackConfig,
-} from "@betterfactory/modules";
+} from "./modules/index.js";
 
 export function resolveTargetDir(
   cwd: string,

@@ -8,7 +8,7 @@ import {
   type PackageManager,
   type StackConfig,
   type WorkItemStoreId,
-} from "@betterfactory/modules"
+} from "create-betterfactory/modules"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 

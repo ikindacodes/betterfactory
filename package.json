@@ -9,9 +9,7 @@
     "format": "turbo format",
     "typecheck": "turbo typecheck",
     "create-betterfactory": "pnpm --filter create-betterfactory build && node packages/create-betterfactory/dist/cli.js",
-    "publish:modules": "pnpm --filter @betterfactory/modules build && pnpm --filter @betterfactory/modules publish --access public --no-git-checks",
-    "publish:cli": "pnpm --filter create-betterfactory build && pnpm --filter create-betterfactory publish --access public --no-git-checks",
-    "publish:packages": "pnpm run publish:modules && pnpm run publish:cli"
+    "publish:cli": "pnpm --filter create-betterfactory build && pnpm --filter create-betterfactory publish --access public --no-git-checks"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",

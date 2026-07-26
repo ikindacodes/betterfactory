@@ -3,7 +3,7 @@ import { Command } from "commander";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import path from "node:path";
-import { listCatalog, type WorkItemStoreId, type InstallMode } from "@betterfactory/modules";
+import { listCatalog, composeStack, type WorkItemStoreId, type InstallMode } from "./modules/index.js";
 import { runWizard, type WizardFlags } from "./wizard.js";
 import { installFactory } from "./install.js";
 
@@ -82,7 +82,6 @@ program
       const stack = await runWizard(flags);
 
       if (opts.dryRun) {
-        const { composeStack } = await import("@betterfactory/modules");
         const files = composeStack(stack);
         p.intro(pc.bgYellow(pc.black(" dry-run ")));
         console.log(pc.dim(JSON.stringify(stack, null, 2)));

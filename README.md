@@ -11,7 +11,7 @@ npx create-betterfactory@latest
 Or compose the command visually with the **Stack Builder**:
 
 ```bash
-pnpm --filter @betterfactory/modules build
+pnpm --filter create-betterfactory build
 pnpm --filter web dev
 # open http://localhost:3000 → Stack Builder
 ```
@@ -31,18 +31,16 @@ pnpm --filter web dev
 ## Monorepo
 
 ```text
-packages/create-betterfactory   # CLI / Wizard
-packages/modules                # shared Module catalog (CLI + Stack Builder)
+packages/create-betterfactory   # CLI, Wizard, Module catalog + recipes
 apps/web                        # landing + Stack Builder
-CONTEXT.md                      # domain language
-docs/adr/                       # architecture decisions
 ```
+
+Planning docs (`CONTEXT.md`, `docs/adr/`) stay local / gitignored.
 
 ### Develop locally
 
 ```bash
 pnpm install
-pnpm --filter @betterfactory/modules build
 pnpm --filter create-betterfactory build
 
 # Interactive
@@ -64,21 +62,22 @@ cd demo-factory && pnpm install && pnpm dev
 
 ## Product boundaries
 
-See [`CONTEXT.md`](./CONTEXT.md) and [`docs/adr/`](./docs/adr/). Highlights:
-
 - Composition-first Wizard (not a thin `eve init` wrapper)
 - Factory is not a coding harness
 - Work Item Store is a Stack choice
 - Default graph: Root + Planner + Reviewer
 - MIT license; generated factories are yours
 
-## Publishing npm packages
+## Publishing
 
-See [docs/publishing.md](./docs/publishing.md). Short version (requires `npm login` and the `@betterfactory` npm org):
+One public package: **`create-betterfactory`**.
 
 ```bash
-pnpm run publish:packages
+# from repo root (requires npm login)
+pnpm run publish:cli
 ```
+
+CLI README (shown on npm): [`packages/create-betterfactory/README.md`](./packages/create-betterfactory/README.md)
 
 ## License
 

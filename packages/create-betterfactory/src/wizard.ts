@@ -5,7 +5,7 @@ import type {
   InstallMode,
   StackConfig,
   WorkItemStoreId,
-} from "@betterfactory/modules";
+} from "./modules/types.js";
 
 export interface WizardFlags {
   name?: string;
