@@ -1,0 +1,49 @@
+{
+  "name": "@betterfactory/modules",
+  "version": "0.0.4",
+  "description": "Shared Module catalog for betterfactory — recipes consumed by create-betterfactory and the Stack Builder",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ikindacodes/betterfactory.git",
+    "directory": "packages/modules"
+  },
+  "homepage": "https://github.com/ikindacodes/betterfactory#readme",
+  "bugs": {
+    "url": "https://github.com/ikindacodes/betterfactory/issues"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsc -p tsconfig.json --watch",
+    "prepublishOnly": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "betterfactory",
+    "eve",
+    "software-factory",
+    "modules",
+    "scaffold"
+  ]
+}

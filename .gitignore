@@ -43,3 +43,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local planning / agent domain notes (not part of the public product)
+CONTEXT.md
+CONTEXT-MAP.md
+docs/adr/
+docs/publishing.md
+.scratch/

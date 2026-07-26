@@ -1,0 +1,47 @@
+/** Stack axes the Wizard collects (v0). */
+export type WorkItemStoreId = "github" | "linear" | "markdown";
+
+export type ChannelId = "eve" | "slack";
+
+export type InstallMode = "new" | "in-place";
+
+export interface StackConfig {
+  /** Package / directory name for the factory. */
+  name: string;
+  installMode: InstallMode;
+  store: WorkItemStoreId;
+  /** Always includes "eve". Optional extras. */
+  channels: ChannelId[];
+  /** Relative path inside Target when using monorepo-friendly layout. */
+  packagePath?: string;
+}
+
+export interface ComposeContext {
+  stack: StackConfig;
+  /** npm package name written into package.json */
+  packageName: string;
+}
+
+export type FileContents = string | ((ctx: ComposeContext) => string);
+
+export interface ModuleRecipe {
+  id: string;
+  /** Short label for CLI / Stack Builder. */
+  label: string;
+  description: string;
+  /** When true, always composed into every factory. */
+  always?: boolean;
+  /** Stack axis this recipe satisfies. */
+  provides?: {
+    store?: WorkItemStoreId;
+    channel?: ChannelId;
+    core?: true;
+  };
+  /**
+   * Paths relative to the factory package root → file body.
+   * Functions receive compose context for templating.
+   */
+  files: Record<string, FileContents>;
+}
+
+export type FileMap = Record<string, string>;
