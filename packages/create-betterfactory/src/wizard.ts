@@ -60,7 +60,7 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
   p.note(
     [
       "Scaffold a Software Factory you own.",
-      "It plans Work Items and gates Ready for Handoff —",
+      "It plans tickets and gates Ready for Handoff —",
       "it does not replace Cursor / Grok Build as a coding harness.",
     ].join("\n"),
     "betterfactory",
@@ -114,7 +114,7 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
 
   const store = assertNotCancel(
     await p.select({
-      message: "Work Item Store",
+      message: "Tickets",
       initialValue: flags.store ?? "github",
       options: [
         {
@@ -130,7 +130,7 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
         {
           value: "markdown" as const,
           label: "Markdown folder",
-          hint: "issues/*.md in the factory package",
+          hint: "tickets/*.md in the factory package",
         },
       ],
     }),

@@ -16,7 +16,7 @@ description: Operate this factory from Slack. Use when adding or using the Slack
 
 # Operate from Slack
 
-Same Root as the eve TUI — Work Item flow is unchanged. **Done** for setup when \`eve channels add slack\` has finished Connect.
+Same Root as the eve TUI — ticket flow is unchanged. **Done** for setup when \`eve channels add slack\` has finished Connect.
 
 ## Setup
 
@@ -46,7 +46,7 @@ npx eve channels add slack
 
 3. Complete Connect / OAuth as prompted by eve docs.
 
-The factory Root is the Slack-facing agent; Planner and Reviewer stay subagents.
+The factory Root is the Slack-facing agent; Planner and Reviewer stay subagents. Ticket flow is unchanged.
 `,
   },
 };

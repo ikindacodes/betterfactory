@@ -2,7 +2,7 @@
 
 **create-next-app energy for Software Factories** — open source, composable, owned completely by you.
 
-Scaffold an [eve](https://eve.dev) agent graph that turns intent into **Work Items** and gates them **Ready for Handoff** for humans or Coding Agents (Cursor, Grok Build, cloud agents).
+Scaffold an [eve](https://eve.dev) agent graph that turns intent into **tickets** and gates them **Ready for Handoff** for humans or Coding Agents (Cursor, Grok Build, cloud agents).
 
 It is **not** a coding harness and does **not** host your factory as a multi-tenant service. You own the generated package.
 
@@ -26,7 +26,7 @@ npx create-betterfactory@latest my-factory -y --pm pnpm
 # or
 pnpm create betterfactory@latest my-factory -y
 
-# Markdown Work Item store, dry-run (print files only — no write/install)
+# Markdown tickets, dry-run (print files only — no write/install)
 npx create-betterfactory@latest my-factory -y --store markdown --dry-run
 
 # Into an existing monorepo
@@ -69,10 +69,10 @@ bun create create-betterfactory@latest
 | Piece | Role |
 |-------|------|
 | **Root** | Intake, route, policy |
-| **Planner** | Plans *by writing* Work Items to your Store |
+| **Planner** | Plans *by writing* tickets |
 | **Reviewer** | Cold-context review + **Ready for Handoff** gate |
 
-**Work Item Stores:** GitHub Issues (default), Linear, or `issues/*.md`.  
+**Tickets:** GitHub Issues (default), Linear, or `tickets/*.md`.  
 **Channels:** eve TUI/HTTP always; optional Slack.  
 **Install:** new directory or in-place into your Target Repository.
 

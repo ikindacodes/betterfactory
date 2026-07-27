@@ -32,7 +32,7 @@ program
   .option("-y, --yes", "Use defaults (non-interactive)")
   .option(
     "--store <store>",
-    "Work Item Store: github | linear | markdown",
+    "Tickets backend: github | linear | markdown",
     "github",
   )
   .option(
@@ -181,7 +181,7 @@ program
       p.note(nextSteps.join("\n"), "Next steps");
       p.outro(
         pc.green("Software Factory ready.") +
-          pc.dim(" You own it — plan Work Items, gate Ready for Handoff."),
+          pc.dim(" You own it — plan tickets, gate Ready for Handoff."),
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

@@ -1,22 +1,22 @@
 import type { ModuleRecipe } from "../types.js";
 
-const createWorkItem = `import { defineTool } from "eve/tools";
+const createTicket = `import { defineTool } from "eve/tools";
 import { always } from "eve/tools/approval";
 import { z } from "zod";
 import {
-  formatWorkItemBody,
+  formatTicketBody,
   READY_FOR_HANDOFF_LABEL,
-} from "#lib/work-item.js";
+} from "#lib/ticket.js";
 
 function requireEnv(name: string): string {
   const v = process.env[name];
-  if (!v) throw new Error(\`\${name} is required for the GitHub Work Item Store\`);
+  if (!v) throw new Error(\`\${name} is required for the GitHub ticket backend\`);
   return v;
 }
 
 export default defineTool({
   description:
-    "Create a Work Item as a GitHub Issue. Requires human approval. Leaves Ready for Handoff unset (false).",
+    "Create a ticket as a GitHub Issue with canonical handoff fields. Requires human approval. Leaves Ready for Handoff unset (false).",
   inputSchema: z.object({
     title: z.string().min(1),
     context: z.string(),
@@ -31,7 +31,7 @@ export default defineTool({
     const token = requireEnv("GITHUB_TOKEN");
     const owner = requireEnv("GITHUB_OWNER");
     const repo = requireEnv("GITHUB_REPO");
-    const body = formatWorkItemBody(input);
+    const body = formatTicketBody(input);
 
     const res = await fetch(
       \`https://api.github.com/repos/\${owner}/\${repo}/issues\`,
@@ -53,19 +53,19 @@ export default defineTool({
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(\`GitHub create issue failed (\${res.status}): \${text}\`);
+      throw new Error(\`GitHub create ticket failed (\${res.status}): \${text}\`);
     }
 
-    const issue = (await res.json()) as {
+    const ticket = (await res.json()) as {
       number: number;
       html_url: string;
       title: string;
     };
 
     return {
-      id: String(issue.number),
-      url: issue.html_url,
-      title: issue.title,
+      id: String(ticket.number),
+      url: ticket.html_url,
+      title: ticket.title,
       readyForHandoff: false,
       readyLabel: READY_FOR_HANDOFF_LABEL,
     };
@@ -73,20 +73,20 @@ export default defineTool({
 });
 `;
 
-const updateWorkItem = `import { defineTool } from "eve/tools";
+const updateTicket = `import { defineTool } from "eve/tools";
 import { always } from "eve/tools/approval";
 import { z } from "zod";
-import { formatWorkItemBody } from "#lib/work-item.js";
+import { formatTicketBody } from "#lib/ticket.js";
 
 function requireEnv(name: string): string {
   const v = process.env[name];
-  if (!v) throw new Error(\`\${name} is required for the GitHub Work Item Store\`);
+  if (!v) throw new Error(\`\${name} is required for the GitHub ticket backend\`);
   return v;
 }
 
 export default defineTool({
   description:
-    "Update a Work Item (GitHub Issue) body/title. Requires human approval. Planner-owned authoring.",
+    "Update a ticket (GitHub Issue) body/title. Requires human approval. Planner-owned authoring.",
   inputSchema: z.object({
     number: z.number().int().positive(),
     title: z.string().min(1).optional(),
@@ -127,7 +127,7 @@ export default defineTool({
           "When updating body fields, provide all of: context, outcome, acceptanceCriteria, constraints, pointers, handoffNotes",
         );
       }
-      patch.body = formatWorkItemBody({
+      patch.body = formatTicketBody({
         context: input.context,
         outcome: input.outcome,
         acceptanceCriteria: input.acceptanceCriteria,
@@ -153,27 +153,27 @@ export default defineTool({
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(\`GitHub update issue failed (\${res.status}): \${text}\`);
+      throw new Error(\`GitHub update ticket failed (\${res.status}): \${text}\`);
     }
 
-    const issue = (await res.json()) as { number: number; html_url: string };
-    return { id: String(issue.number), url: issue.html_url };
+    const ticket = (await res.json()) as { number: number; html_url: string };
+    return { id: String(ticket.number), url: ticket.html_url };
   },
 });
 `;
 
-const getWorkItem = `import { defineTool } from "eve/tools";
+const getTicket = `import { defineTool } from "eve/tools";
 import { z } from "zod";
-import { parseReadyFromLabels } from "#lib/work-item.js";
+import { parseReadyFromLabels } from "#lib/ticket.js";
 
 function requireEnv(name: string): string {
   const v = process.env[name];
-  if (!v) throw new Error(\`\${name} is required for the GitHub Work Item Store\`);
+  if (!v) throw new Error(\`\${name} is required for the GitHub ticket backend\`);
   return v;
 }
 
 export default defineTool({
-  description: "Fetch a Work Item (GitHub Issue) by number for cold review.",
+  description: "Fetch a ticket (GitHub Issue) by number for cold review.",
   inputSchema: z.object({
     number: z.number().int().positive(),
   }),
@@ -194,10 +194,10 @@ export default defineTool({
     );
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(\`GitHub get issue failed (\${res.status}): \${text}\`);
+      throw new Error(\`GitHub get ticket failed (\${res.status}): \${text}\`);
     }
 
-    const issue = (await res.json()) as {
+    const ticket = (await res.json()) as {
       number: number;
       title: string;
       body: string | null;
@@ -206,27 +206,27 @@ export default defineTool({
     };
 
     return {
-      id: String(issue.number),
-      title: issue.title,
-      body: issue.body ?? "",
-      url: issue.html_url,
-      readyForHandoff: parseReadyFromLabels(issue.labels.map((l) => l.name)),
+      id: String(ticket.number),
+      title: ticket.title,
+      body: ticket.body ?? "",
+      url: ticket.html_url,
+      readyForHandoff: parseReadyFromLabels(ticket.labels.map((l) => l.name)),
     };
   },
 });
 `;
 
-const commentWorkItem = `import { defineTool } from "eve/tools";
+const commentTicket = `import { defineTool } from "eve/tools";
 import { z } from "zod";
 
 function requireEnv(name: string): string {
   const v = process.env[name];
-  if (!v) throw new Error(\`\${name} is required for the GitHub Work Item Store\`);
+  if (!v) throw new Error(\`\${name} is required for the GitHub ticket backend\`);
   return v;
 }
 
 export default defineTool({
-  description: "Comment on a Work Item (GitHub Issue). Used by Reviewer for cold-context feedback.",
+  description: "Comment on a ticket (GitHub Issue). Used by Reviewer for cold-context feedback.",
   inputSchema: z.object({
     number: z.number().int().positive(),
     body: z.string().min(1),
@@ -263,17 +263,17 @@ export default defineTool({
 
 const setReady = `import { defineTool } from "eve/tools";
 import { z } from "zod";
-import { READY_FOR_HANDOFF_LABEL } from "#lib/work-item.js";
+import { READY_FOR_HANDOFF_LABEL } from "#lib/ticket.js";
 
 function requireEnv(name: string): string {
   const v = process.env[name];
-  if (!v) throw new Error(\`\${name} is required for the GitHub Work Item Store\`);
+  if (!v) throw new Error(\`\${name} is required for the GitHub ticket backend\`);
   return v;
 }
 
 export default defineTool({
   description:
-    "Set or clear Ready for Handoff on a GitHub Issue via the ready-for-handoff label. Reviewer gate.",
+    "Set or clear Ready for Handoff on a GitHub ticket via the ready-for-handoff label. Reviewer gate.",
   inputSchema: z.object({
     number: z.number().int().positive(),
     ready: z.boolean(),
@@ -294,12 +294,12 @@ export default defineTool({
       },
     );
     if (!getRes.ok) {
-      throw new Error(\`GitHub get issue failed (\${getRes.status})\`);
+      throw new Error(\`GitHub get ticket failed (\${getRes.status})\`);
     }
-    const issue = (await getRes.json()) as {
+    const ticket = (await getRes.json()) as {
       labels: Array<{ name: string }>;
     };
-    const labels = new Set(issue.labels.map((l) => l.name));
+    const labels = new Set(ticket.labels.map((l) => l.name));
     if (ready) labels.add(READY_FOR_HANDOFF_LABEL);
     else labels.delete(READY_FOR_HANDOFF_LABEL);
 
@@ -330,30 +330,30 @@ export default defineTool({
 export const storeGithubRecipe: ModuleRecipe = {
   id: "store-github",
   label: "GitHub Issues",
-  description: "Work Item Store backed by GitHub Issues (default)",
+  description: "Tickets as GitHub Issues (default)",
   provides: { store: "github" },
   files: {
-    "agent/subagents/planner/tools/create_work_item.ts": createWorkItem,
-    "agent/subagents/planner/tools/update_work_item.ts": updateWorkItem,
-    "agent/subagents/planner/tools/get_work_item.ts": getWorkItem,
-    "agent/subagents/reviewer/tools/get_work_item.ts": getWorkItem,
-    "agent/subagents/reviewer/tools/comment_work_item.ts": commentWorkItem,
+    "agent/subagents/planner/tools/create_ticket.ts": createTicket,
+    "agent/subagents/planner/tools/update_ticket.ts": updateTicket,
+    "agent/subagents/planner/tools/get_ticket.ts": getTicket,
+    "agent/subagents/reviewer/tools/get_ticket.ts": getTicket,
+    "agent/subagents/reviewer/tools/comment_ticket.ts": commentTicket,
     "agent/subagents/reviewer/tools/set_ready_for_handoff.ts": setReady,
     "agent/subagents/planner/skills/file-github.md": `---
-description: File to GitHub Issues. Use when creating or updating a GitHub issue.
+description: File tickets to GitHub. Use when creating or updating a GitHub ticket.
 ---
 
 # File GitHub
 
-Map canonical fields into a GitHub Issue. **Done** when the issue exists with full body sections and Ready for Handoff left unset for Reviewer.
+Map canonical fields into a GitHub Issue (ticket). **Done** when the ticket exists with full body sections and Ready for Handoff left unset for Reviewer.
 
 ## Tools
 
 | Tool | Use |
 |------|-----|
-| \`create_work_item\` | New issue (approval required) |
-| \`update_work_item\` | Title/body (approval required; send all body fields when changing content) |
-| \`get_work_item\` | Read for context |
+| \`create_ticket\` | New ticket (approval required) |
+| \`update_ticket\` | Title/body (approval required; send all body fields when changing content) |
+| \`get_ticket\` | Read for context |
 
 ## Rules
 
@@ -361,7 +361,7 @@ Map canonical fields into a GitHub Issue. **Done** when the issue exists with fu
 - Reviewer owns Ready for Handoff via \`set_ready_for_handoff\` / the \`ready-for-handoff\` label.
 `,
     "agent/subagents/reviewer/skills/gate-github.md": `---
-description: Gate Ready for Handoff on GitHub Issues. Use when cold-reading a GitHub issue for the Reviewer gate.
+description: Gate Ready for Handoff on GitHub tickets. Use when cold-reading a GitHub ticket for the Reviewer gate.
 ---
 
 # Gate GitHub
@@ -370,9 +370,9 @@ Cold-read and gate. **Done** when every Ready for Handoff bar is scored, feedbac
 
 ## Steps
 
-1. \`get_work_item\` — load issue body only.
+1. \`get_ticket\` — load ticket body only.
 2. Load \`check-ready-for-handoff\` — score every bar pass/fail with a one-line reason.
-3. Any fail: \`comment_work_item\` with blockers; \`set_ready_for_handoff\` ready false.
+3. Any fail: \`comment_ticket\` with blockers; \`set_ready_for_handoff\` ready false.
 4. All pass: \`set_ready_for_handoff\` ready true; brief confirm.
 
 ## Rules

@@ -72,7 +72,7 @@ const STORES: {
   {
     id: "markdown",
     label: "Markdown folder",
-    hint: "issues/*.md in the factory package",
+    hint: "tickets/*.md in the factory package",
   },
 ]
 
@@ -315,7 +315,7 @@ export function StackBuilder() {
               ) : null}
 
               <FieldSet className="gap-3">
-                <FieldLegend variant="label">Work Item Store</FieldLegend>
+                <FieldLegend variant="label">Tickets</FieldLegend>
                 <RadioGroup
                   value={store}
                   onValueChange={(value) =>

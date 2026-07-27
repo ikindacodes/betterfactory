@@ -1,10 +1,10 @@
 import type { ModuleRecipe } from "../types.js";
 
-const createWorkItem = `import { defineTool } from "eve/tools";
+const createTicket = `import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { formatWorkItemBody } from "#lib/work-item.js";
+import { formatTicketBody } from "#lib/ticket.js";
 
 function slugify(title: string): string {
   return title
@@ -16,7 +16,7 @@ function slugify(title: string): string {
 
 export default defineTool({
   description:
-    "Create a Work Item as markdown under issues/. No remote approval gate (local files).",
+    "Create a ticket as markdown under tickets/. No remote approval gate (local files).",
   inputSchema: z.object({
     title: z.string().min(1),
     context: z.string(),
@@ -27,9 +27,9 @@ export default defineTool({
     handoffNotes: z.string(),
   }),
   async execute(input) {
-    const dir = path.join(process.cwd(), "issues");
+    const dir = path.join(process.cwd(), "tickets");
     await mkdir(dir, { recursive: true });
-    const slug = slugify(input.title) || "work-item";
+    const slug = slugify(input.title) || "ticket";
     const filename = \`\${slug}.md\`;
     const filePath = path.join(dir, filename);
     const body = \`---
@@ -39,26 +39,26 @@ readyForHandoff: false
 
 # \${input.title}
 
-\${formatWorkItemBody(input)}
+\${formatTicketBody(input)}
 \`;
     await writeFile(filePath, body, "utf8");
     return {
       id: filename,
-      path: \`issues/\${filename}\`,
+      path: \`tickets/\${filename}\`,
       readyForHandoff: false,
     };
   },
 });
 `;
 
-const updateWorkItem = `import { defineTool } from "eve/tools";
+const updateTicket = `import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import { formatWorkItemBody } from "#lib/work-item.js";
+import { formatTicketBody } from "#lib/ticket.js";
 
 export default defineTool({
-  description: "Update a markdown Work Item under issues/. Planner-owned authoring.",
+  description: "Update a markdown ticket under tickets/. Planner-owned authoring.",
   inputSchema: z.object({
     id: z.string().describe("Filename e.g. fix-checkout.md"),
     title: z.string().min(1),
@@ -70,7 +70,7 @@ export default defineTool({
     handoffNotes: z.string(),
   }),
   async execute(input) {
-    const filePath = path.join(process.cwd(), "issues", input.id);
+    const filePath = path.join(process.cwd(), "tickets", input.id);
     const body = \`---
 title: \${JSON.stringify(input.title)}
 readyForHandoff: false
@@ -78,32 +78,32 @@ readyForHandoff: false
 
 # \${input.title}
 
-\${formatWorkItemBody(input)}
+\${formatTicketBody(input)}
 \`;
     await writeFile(filePath, body, "utf8");
-    return { id: input.id, path: \`issues/\${input.id}\`, readyForHandoff: false };
+    return { id: input.id, path: \`tickets/\${input.id}\`, readyForHandoff: false };
   },
 });
 `;
 
-const getWorkItem = `import { defineTool } from "eve/tools";
+const getTicket = `import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 export default defineTool({
-  description: "Read a markdown Work Item for cold review.",
+  description: "Read a markdown ticket for cold review.",
   inputSchema: z.object({
     id: z.string(),
   }),
   async execute({ id }) {
-    const filePath = path.join(process.cwd(), "issues", id);
+    const filePath = path.join(process.cwd(), "tickets", id);
     const body = await readFile(filePath, "utf8");
     const ready = /readyForHandoff:\\s*true/.test(body);
     const titleMatch = body.match(/^title:\\s*(.+)$/m);
     return {
       id,
-      path: \`issues/\${id}\`,
+      path: \`tickets/\${id}\`,
       title: titleMatch?.[1]?.replace(/^"|"$/g, "") ?? id,
       body,
       readyForHandoff: ready,
@@ -112,26 +112,26 @@ export default defineTool({
 });
 `;
 
-const commentWorkItem = `import { defineTool } from "eve/tools";
+const commentTicket = `import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { appendFile } from "node:fs/promises";
 import path from "node:path";
 
 export default defineTool({
-  description: "Append a Reviewer comment section to a markdown Work Item.",
+  description: "Append a Reviewer comment section to a markdown ticket.",
   inputSchema: z.object({
     id: z.string(),
     body: z.string().min(1),
   }),
   async execute({ id, body }) {
-    const filePath = path.join(process.cwd(), "issues", id);
+    const filePath = path.join(process.cwd(), "tickets", id);
     const stamp = new Date().toISOString();
     await appendFile(
       filePath,
       \`\\n\\n## Review comment (\${stamp})\\n\\n\${body}\\n\`,
       "utf8",
     );
-    return { id, path: \`issues/\${id}\` };
+    return { id, path: \`tickets/\${id}\` };
   },
 });
 `;
@@ -142,13 +142,13 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export default defineTool({
-  description: "Set readyForHandoff frontmatter on a markdown Work Item. Reviewer gate.",
+  description: "Set readyForHandoff frontmatter on a markdown ticket. Reviewer gate.",
   inputSchema: z.object({
     id: z.string(),
     ready: z.boolean(),
   }),
   async execute({ id, ready }) {
-    const filePath = path.join(process.cwd(), "issues", id);
+    const filePath = path.join(process.cwd(), "tickets", id);
     let content = await readFile(filePath, "utf8");
     if (/readyForHandoff:\\s*(true|false)/.test(content)) {
       content = content.replace(
@@ -170,31 +170,31 @@ export const storeMarkdownRecipe: ModuleRecipe = {
   id: "store-markdown",
   label: "Markdown folder",
   description:
-    "Work Item Store as markdown files under issues/ (no remote write approval)",
+    "Tickets as markdown files under tickets/ (no remote write approval)",
   provides: { store: "markdown" },
   files: {
-    "issues/.gitkeep": "",
-    "agent/subagents/planner/tools/create_work_item.ts": createWorkItem,
-    "agent/subagents/planner/tools/update_work_item.ts": updateWorkItem,
-    "agent/subagents/planner/tools/get_work_item.ts": getWorkItem,
-    "agent/subagents/reviewer/tools/get_work_item.ts": getWorkItem,
-    "agent/subagents/reviewer/tools/comment_work_item.ts": commentWorkItem,
+    "tickets/.gitkeep": "",
+    "agent/subagents/planner/tools/create_ticket.ts": createTicket,
+    "agent/subagents/planner/tools/update_ticket.ts": updateTicket,
+    "agent/subagents/planner/tools/get_ticket.ts": getTicket,
+    "agent/subagents/reviewer/tools/get_ticket.ts": getTicket,
+    "agent/subagents/reviewer/tools/comment_ticket.ts": commentTicket,
     "agent/subagents/reviewer/tools/set_ready_for_handoff.ts": setReady,
     "agent/subagents/planner/skills/file-markdown.md": `---
-description: File to issues/*.md. Use when creating or updating a markdown issue file.
+description: File tickets to tickets/*.md. Use when creating or updating a markdown ticket.
 ---
 
 # File Markdown
 
-Write canonical fields under \`issues/*.md\`. **Done** when the file exists with full body sections and \`readyForHandoff: false\` for Reviewer.
+Write canonical fields under \`tickets/*.md\`. **Done** when the file exists with full body sections and \`readyForHandoff: false\` for Reviewer.
 
 ## Tools
 
 | Tool | Use |
 |------|-----|
-| \`create_work_item\` | New \`issues/<slug>.md\` (no remote approval) |
-| \`update_work_item\` | Rewrite title + body by filename id |
-| \`get_work_item\` | Read for context |
+| \`create_ticket\` | New \`tickets/<slug>.md\` (no remote approval) |
+| \`update_ticket\` | Rewrite title + body by filename id |
+| \`get_ticket\` | Read for context |
 
 ## Rules
 
@@ -202,7 +202,7 @@ Write canonical fields under \`issues/*.md\`. **Done** when the file exists with
 - Reviewer owns Ready for Handoff via \`set_ready_for_handoff\`.
 `,
     "agent/subagents/reviewer/skills/gate-markdown.md": `---
-description: Gate Ready for Handoff on issues/*.md. Use when cold-reading a markdown issue file for the Reviewer gate.
+description: Gate Ready for Handoff on tickets/*.md. Use when cold-reading a markdown ticket for the Reviewer gate.
 ---
 
 # Gate Markdown
@@ -211,9 +211,9 @@ Cold-read and gate. **Done** when every Ready for Handoff bar is scored, feedbac
 
 ## Steps
 
-1. \`get_work_item\` — load file body only.
+1. \`get_ticket\` — load file body only.
 2. Load \`check-ready-for-handoff\` — score every bar pass/fail with a one-line reason.
-3. Any fail: \`comment_work_item\` with blockers; \`set_ready_for_handoff\` ready false.
+3. Any fail: \`comment_ticket\` with blockers; \`set_ready_for_handoff\` ready false.
 4. All pass: \`set_ready_for_handoff\` ready true; brief confirm.
 
 ## Rules

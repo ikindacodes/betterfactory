@@ -7,12 +7,12 @@ const dorList = DEFINITION_OF_READY_CHECKLIST.map((c) => `- [ ] ${c}`).join(
 
 /** Shared Ready for Handoff skill — Root, Planner, and Reviewer each get a copy (subagents do not inherit root skills). */
 const checkReadyForHandoffSkill = `---
-description: Check Ready for Handoff. Use when structuring an item for filing, or when gating Ready for Handoff.
+description: Check Ready for Handoff. Use when structuring a ticket for filing, or when gating Ready for Handoff.
 ---
 
 # Check Ready for Handoff
 
-Score the item against every bar below. **Done** when each bar is pass or fail with a one-line reason.
+Score the ticket against every bar below. **Done** when each bar is pass or fail with a one-line reason.
 
 ## Bars (all required for Ready for Handoff)
 
@@ -30,7 +30,7 @@ Cold-read only (no Planner history). Comment failures; set Ready for Handoff tru
 
 ## Boundary
 
-Ship items and gates. Humans and Coding Agents execute application code outside this factory.
+Ship tickets and gates. Humans and Coding Agents execute application code outside this factory.
 `;
 
 export const coreRecipe: ModuleRecipe = {
@@ -106,7 +106,7 @@ export const coreRecipe: ModuleRecipe = {
       ];
       if (stack.store === "github") {
         lines.push(
-          "# GitHub Work Item Store",
+          "# GitHub tickets (Issues API)",
           "GITHUB_TOKEN=",
           "GITHUB_OWNER=",
           "GITHUB_REPO=",
@@ -114,7 +114,7 @@ export const coreRecipe: ModuleRecipe = {
         );
       }
       if (stack.store === "linear") {
-        lines.push("# Linear Work Item Store", "LINEAR_API_KEY=", "");
+        lines.push("# Linear tickets", "LINEAR_API_KEY=", "");
       }
       if (stack.channels.includes("slack")) {
         lines.push(
@@ -130,19 +130,19 @@ export const coreRecipe: ModuleRecipe = {
 
 Software Factory scaffolded by [betterfactory](https://github.com/ikindacodes/betterfactory).
 
-This factory turns intent into **Work Items** (not application code) and gates them **Ready for Handoff** for humans or Coding Agents.
+This factory turns intent into **tickets** (not application code) and gates them **Ready for Handoff** for humans or Coding Agents.
 
 ## Graph
 
 | Role | Job |
 |------|-----|
 | **Root** | Intake, route, policy |
-| **Planner** | Plan by writing Work Items to the Store |
+| **Planner** | Plan by writing tickets |
 | **Reviewer** | Cold-context comment + Ready for Handoff gate |
 
 ## Stack
 
-- **Work Item Store:** \`${stack.store}\`
+- **Tickets:** \`${stack.store}\`
 - **Channels:** ${stack.channels.map((c) => `\`${c}\``).join(", ")}
 
 ## Quick start
@@ -150,7 +150,7 @@ This factory turns intent into **Work Items** (not application code) and gates t
 \`create-betterfactory\` already copied \`.env.example\` → \`.env\` and ran install when you scaffolded. Finish setup:
 
 \`\`\`bash
-# Fill in AI_GATEWAY_API_KEY (and Store credentials) in .env
+# Fill in AI_GATEWAY_API_KEY (and ticket backend credentials) in .env
 pnpm dev       # or: npm run dev / yarn dev / bun run dev
 \`\`\`
 
@@ -168,15 +168,15 @@ export default defineAgent({
 
     "agent/instructions.md": `# Identity
 
-You are the **Root** of a Software Factory. You turn user intent into high-quality **Work Items** and route them through Planner and Reviewer. You do **not** write application source code or act as a Coding Agent (Cursor, Grok Build, etc.).
+You are the **Root** of a Software Factory. You turn user intent into high-quality **tickets** and route them through Planner and Reviewer. You do **not** write application source code or act as a Coding Agent (Cursor, Grok Build, etc.).
 
 ## Roles
 
 - **You (Root):** intake, clarify, route, enforce policy, talk to the user.
-- **\`planner\`:** breaks work down and **writes** Work Items to the Work Item Store (create/update bodies).
-- **\`reviewer\`:** judges Work Items in a **clean context** (no Planner history). Comments and sets **Ready for Handoff**; does **not** freely rewrite bodies.
+- **\`planner\`:** breaks work down and **writes** tickets (create/update bodies).
+- **\`reviewer\`:** judges tickets in a **clean context** (no Planner history). Comments and sets **Ready for Handoff**; Planner rewrites bodies.
 
-## Work Item fields (always)
+## Ticket fields (always)
 
 Title, Context, Outcome, Acceptance criteria, Constraints, Pointers, Handoff notes, Ready for Handoff.
 
@@ -184,14 +184,14 @@ Title, Context, Outcome, Acceptance criteria, Constraints, Pointers, Handoff not
 
 1. Understand the user's intent; ask only necessary clarifying questions.
 2. Delegate to \`planner\` with a self-contained message (goals, constraints, repo context).
-3. After Work Items exist, delegate to \`reviewer\` with the Work Item content/ids only — no Planner chat history.
+3. After tickets exist, delegate to \`reviewer\` with the ticket content/ids only — no Planner chat history.
 4. If not ready, send Reviewer feedback back to \`planner\` for revisions (Planner rewrites; Reviewer does not).
 5. When Ready for Handoff, tell the user how to pick it up (human or Coding Agent).
 
 ## Hard rules
 
-- Ship Work Items and gates — humans and Coding Agents execute application code.
-- Prefer tools over guessing when the Store or repo facts are needed.
+- Ship tickets and gates — humans and Coding Agents execute application code.
+- Prefer tools over guessing when ticket or repo facts are needed.
 - Pack everything a subagent needs into \`message\` — children do not see your history.
 `,
 
@@ -215,18 +215,18 @@ export default eveChannel({
 
 export default defineAgent({
   description:
-    "Plans by writing Work Items to the Store: breakdown, structure, acceptance criteria, and filing. Ships Work Items — not application code.",
+    "Plans by writing tickets: breakdown, structure, acceptance criteria, and filing. Ships tickets — not application code.",
   model: "anthropic/claude-sonnet-5",
 });
 `,
 
     "agent/subagents/planner/instructions.md": `# Identity
 
-You are the **Planner** in a Software Factory. You plan **by writing Work Items** to the Work Item Store. Filing and structuring are one job — you do not hand prose to a separate "author."
+You are the **Planner** in a Software Factory. You plan **by writing tickets**. Filing and structuring are one job — you do not hand prose to a separate "author."
 
 ## Output
 
-Each Work Item must include:
+Each ticket must include:
 
 - **Title** — one-line outcome
 - **Context** — why this exists
@@ -240,24 +240,24 @@ Leave Ready for Handoff false for Reviewer unless the user explicitly wants a dr
 
 ## Rules
 
-- Load \`check-ready-for-handoff\` when structuring items; every bar must be able to pass.
-- Use Store tools for create/update. Remote Store writes may require human approval — that is expected.
-- Prefer small, handoff-sized Work Items over epics.
-- Ship Work Items only — humans and Coding Agents execute application code.
+- Load \`check-ready-for-handoff\` when structuring tickets; every bar must be able to pass.
+- Use ticket tools for create/update (\`create_ticket\`, \`update_ticket\`, etc.). Remote writes may require human approval — that is expected.
+- Prefer small, handoff-sized tickets over epics.
+- Ship tickets only — humans and Coding Agents execute application code.
 `,
 
     "agent/subagents/reviewer/agent.ts": `import { defineAgent } from "eve";
 
 export default defineAgent({
   description:
-    "Reviews Work Items cold against Ready for Handoff. Comments and gates readiness; Planner rewrites bodies.",
+    "Reviews tickets cold against Ready for Handoff. Comments and gates readiness; Planner rewrites bodies.",
   model: "anthropic/claude-sonnet-5",
 });
 `,
 
     "agent/subagents/reviewer/instructions.md": `# Identity
 
-You are the **Reviewer** in a Software Factory. You receive Work Item content (or ids) **without** the Planner's conversation history — a cold read.
+You are the **Reviewer** in a Software Factory. You receive ticket content (or ids) **without** the Planner's conversation history — a cold read.
 
 ## Authority
 
@@ -268,8 +268,8 @@ You are the **Reviewer** in a Software Factory. You receive Work Item content (o
 
 1. Load \`check-ready-for-handoff\`.
 2. Score every bar (pass/fail + one-line reason).
-3. Gaps: comment blockers, Ready for Handoff **false**, summarize for Root.
-4. All pass: Ready for Handoff **true**, confirm briefly.
+3. Gaps: comment blockers (\`comment_ticket\`), Ready for Handoff **false**, summarize for Root.
+4. All pass: Ready for Handoff **true** (\`set_ready_for_handoff\`), confirm briefly.
 
 ## Rules
 
@@ -277,10 +277,10 @@ You are the **Reviewer** in a Software Factory. You receive Work Item content (o
 - Ship gates and comments only — humans and Coding Agents execute application code.
 `,
 
-    "lib/work-item.ts": `/**
- * Canonical Work Item shape used across Work Item Stores.
+    "lib/ticket.ts": `/**
+ * Canonical ticket shape used across ticket backends (GitHub, Linear, markdown).
  */
-export type WorkItem = {
+export type Ticket = {
   title: string;
   context: string;
   outcome: string;
@@ -293,7 +293,7 @@ export type WorkItem = {
 
 export const READY_FOR_HANDOFF_LABEL = "ready-for-handoff";
 
-export function formatWorkItemBody(item: Omit<WorkItem, "title" | "readyForHandoff">): string {
+export function formatTicketBody(item: Omit<Ticket, "title" | "readyForHandoff">): string {
   return \`## Context
 
 \${item.context}

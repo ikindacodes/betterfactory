@@ -1,6 +1,6 @@
 /**
- * Canonical Work Item fields (store-agnostic).
- * Stores map these into issue bodies, tracker fields, or markdown frontmatter.
+ * Canonical ticket fields (backend-agnostic).
+ * Backends map these into GitHub/Linear bodies or markdown frontmatter.
  */
 export const WORK_ITEM_FIELDS = [
   "title",

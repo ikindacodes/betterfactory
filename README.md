@@ -2,7 +2,7 @@
 
 **create-next-app energy for Software Factories** — open source, composable, owned completely by you.
 
-Scaffold an [eve](https://eve.dev) agent graph that turns intent into **Work Items** and gates them **Ready for Handoff** for humans or Coding Agents (Cursor, Grok Build, cloud agents). It is **not** a coding harness and does **not** host your factory as a multi-tenant service.
+Scaffold an [eve](https://eve.dev) agent graph that turns intent into **tickets** and gates them **Ready for Handoff** for humans or Coding Agents (Cursor, Grok Build, cloud agents). It is **not** a coding harness and does **not** host your factory as a multi-tenant service.
 
 ```bash
 npx create-betterfactory@latest
@@ -21,10 +21,10 @@ pnpm --filter web dev
 | Piece | Role |
 |-------|------|
 | **Root** | Intake, route, policy |
-| **Planner** | Plans *by writing* Work Items to your Store |
+| **Planner** | Plans *by writing* tickets |
 | **Reviewer** | Cold-context comment + Ready for Handoff gate |
 
-**Work Item Stores (Stack choice):** GitHub Issues (default), Linear, or `issues/*.md`.  
+**Tickets (Stack choice):** GitHub Issues (default), Linear, or `tickets/*.md`.  
 **Channels:** eve TUI/HTTP always; optional Slack.  
 **Install:** new directory or in-place into your Target Repository (own package tree).
 
@@ -64,7 +64,7 @@ cd demo-factory && pnpm install && pnpm dev
 
 - Composition-first Wizard (not a thin `eve init` wrapper)
 - Factory is not a coding harness
-- Work Item Store is a Stack choice
+- Ticket backend is a Stack choice
 - Default graph: Root + Planner + Reviewer
 - MIT license; generated factories are yours
 
