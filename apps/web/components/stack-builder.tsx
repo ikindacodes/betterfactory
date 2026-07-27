@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import {
   buildCreateCommand,
   type ChannelId,
@@ -9,10 +9,56 @@ import {
   type StackConfig,
   type WorkItemStoreId,
 } from "create-betterfactory/modules"
+import { SiteHeader } from "@/components/site-header"
+import { StackPreviewTree } from "@/components/stack-preview-tree"
+import {
+  clearStackSelections,
+  DEFAULT_STACK_SELECTIONS,
+  loadStackSelections,
+  saveStackSelections,
+  finalizeFactoryName,
+  sanitizeFactoryNameInput,
+  type StackBuilderSelections,
+} from "@/lib/stack-builder-storage"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog"
 import { Button } from "@workspace/ui/components/button"
-import { cn } from "@workspace/ui/lib/utils"
-
-const STORES: { id: WorkItemStoreId; label: string; hint: string }[] = [
+import { Checkbox } from "@workspace/ui/components/checkbox"
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from "@workspace/ui/components/field"
+import { Input } from "@workspace/ui/components/input"
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@workspace/ui/components/radio-group"
+import { Kbd } from "@workspace/ui/components/kbd"
+import { ScrollArea } from "@workspace/ui/components/scroll-area"
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@workspace/ui/components/toggle-group"
+const STORES: {
+  id: WorkItemStoreId
+  label: string
+  hint: string
+}[] = [
   {
     id: "github",
     label: "GitHub Issues",
@@ -32,14 +78,49 @@ const STORES: { id: WorkItemStoreId; label: string; hint: string }[] = [
 
 const PACKAGE_MANAGERS: PackageManager[] = ["npm", "pnpm", "bun", "yarn"]
 
+/** Boxed mono input for factory slug / path — denser than sera underline. */
+const monoInputClass =
+  "h-10 border-border bg-background font-mono text-sm border border-b-border px-3 py-2 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+
 export function StackBuilder() {
-  const [name, setName] = useState("my-factory")
-  const [installMode, setInstallMode] = useState<InstallMode>("new")
-  const [packagePath, setPackagePath] = useState("apps/my-factory")
-  const [store, setStore] = useState<WorkItemStoreId>("github")
-  const [slack, setSlack] = useState(false)
-  const [pm, setPm] = useState<PackageManager>("npm")
+  const [selections, setSelections] = useState<StackBuilderSelections>(
+    DEFAULT_STACK_SELECTIONS,
+  )
+  const [ready, setReady] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
+  const copyTimeoutRef = useRef<number | null>(null)
+
+  useLayoutEffect(() => {
+    setSelections(loadStackSelections())
+    setReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (!ready) return
+    saveStackSelections(selections)
+  }, [selections, ready])
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current !== null) {
+        window.clearTimeout(copyTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const { name, installMode, packagePath, store, slack, pm } = selections
+
+  function patch(partial: Partial<StackBuilderSelections>) {
+    setSelections((prev) => ({ ...prev, ...partial }))
+  }
+
+  function resetToDefaults() {
+    clearStackSelections()
+    setSelections({ ...DEFAULT_STACK_SELECTIONS })
+    setCopied(false)
+    setResetOpen(false)
+  }
 
   const stack: StackConfig = useMemo(() => {
     const channels: ChannelId[] = ["eve"]
@@ -62,213 +143,286 @@ export function StackBuilder() {
     try {
       await navigator.clipboard.writeText(command)
       setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
+      if (copyTimeoutRef.current !== null) {
+        window.clearTimeout(copyTimeoutRef.current)
+      }
+      copyTimeoutRef.current = window.setTimeout(() => setCopied(false), 2000)
     } catch {
       // ignore
     }
   }
 
+  function syncPackagePathFromName(nextName: string) {
+    if (installMode === "in-place" && packagePath.startsWith("apps/")) {
+      return `apps/${nextName || "my-factory"}`
+    }
+    return undefined
+  }
+
+  if (!ready) {
+    return <StackBuilderShell />
+  }
+
+  const resetAction = (
+    <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+      <AlertDialogTrigger
+        render={
+          <Button type="button" variant="outline" size="sm" className="shrink-0" />
+        }
+      >
+        Reset
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reset selections?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This clears your saved Stack Builder choices in this browser and
+            restores the defaults (name, package manager, install mode, store,
+            and channels).
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={resetToDefaults}>Reset</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_minmax(0,1.1fr)] lg:gap-10">
-      <div className="flex flex-col gap-6">
-        <Field label="Factory name">
-          <input
-            className={inputClass}
-            value={name}
-            onChange={(e) => {
-              const v = e.target.value
-              setName(v)
-              if (installMode === "in-place" && packagePath.startsWith("apps/")) {
-                setPackagePath(`apps/${v.trim() || "my-factory"}`)
-              }
-            }}
-            placeholder="my-factory"
-            spellCheck={false}
-          />
-        </Field>
+    <div className="border-border flex h-full w-full flex-col overflow-hidden border-0 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
+      <SiteHeader actions={resetAction} />
 
-        <Field label="Install mode">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Choice
-              active={installMode === "new"}
-              title="New directory"
-              hint={`./${name || "my-factory"}`}
-              onClick={() => setInstallMode("new")}
-            />
-            <Choice
-              active={installMode === "in-place"}
-              title="Into this repository"
-              hint="Own package tree, not your Next app"
-              onClick={() => setInstallMode("in-place")}
-            />
-          </div>
-        </Field>
-
-        {installMode === "in-place" ? (
-          <Field label="Path inside Target Repository">
-            <input
-              className={inputClass}
-              value={packagePath}
-              onChange={(e) => setPackagePath(e.target.value)}
-              placeholder="apps/factory"
-              spellCheck={false}
-            />
-          </Field>
-        ) : null}
-
-        <Field label="Work Item Store">
-          <div className="grid gap-2">
-            {STORES.map((s) => (
-              <Choice
-                key={s.id}
-                active={store === s.id}
-                title={s.label}
-                hint={s.hint}
-                onClick={() => setStore(s.id)}
-              />
-            ))}
-          </div>
-        </Field>
-
-        <Field label="Channels">
-          <div className="flex flex-col gap-2">
-            <div className="border-border bg-muted/40 text-muted-foreground rounded-none border px-3 py-2 text-xs">
-              eve TUI / HTTP — always included
-            </div>
-            <label className="border-border hover:bg-muted/30 flex cursor-pointer items-start gap-3 border px-3 py-3 text-sm transition-colors">
-              <input
-                type="checkbox"
-                className="mt-0.5 size-4 accent-primary"
-                checked={slack}
-                onChange={(e) => setSlack(e.target.checked)}
-              />
-              <span>
-                <span className="font-medium">Slack</span>
-                <span className="text-muted-foreground mt-0.5 block text-xs">
-                  Optional surface — finish with{" "}
-                  <code className="font-mono">eve channels add slack</code>
-                </span>
-              </span>
-            </label>
-          </div>
-        </Field>
-
-        <div className="text-muted-foreground text-xs leading-relaxed">
-          Default roles are fixed:{" "}
-          <span className="text-foreground font-medium">Root</span>,{" "}
-          <span className="text-foreground font-medium">Planner</span>,{" "}
-          <span className="text-foreground font-medium">Reviewer</span>. The
-          factory authors Work Items — it is not a coding harness.
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-xs font-semibold tracking-widest uppercase">
-            Your command
-          </span>
-          <div className="flex flex-wrap gap-1">
-            {PACKAGE_MANAGERS.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setPm(m)}
-                className={cn(
-                  "border px-2 py-1 font-mono text-[10px] tracking-wide uppercase transition-colors",
-                  pm === m
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border text-muted-foreground hover:bg-muted",
-                )}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <pre className="border-border bg-card text-card-foreground overflow-x-auto border p-4 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap sm:text-sm">
-          {command}
-        </pre>
-
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={copy}>
-            {copied ? "Copied" : "Copy command"}
-          </Button>
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={
-              <a
-                href="https://github.com/ikindacodes/betterfactory"
-                target="_blank"
-                rel="noreferrer"
-              />
-            }
+      <div className="grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)]">
+        <aside
+          className="border-border flex min-h-0 flex-col overflow-hidden border-b lg:border-r lg:border-b-0"
+          aria-label="Stack options"
+        >
+          <ScrollArea
+            className="min-h-0 flex-1"
+            viewportClassName="scroll-fade overscroll-contain"
           >
-            GitHub
-          </Button>
+            <div className="p-4">
+              <FieldGroup className="gap-6">
+              <Field>
+                <FieldLabel htmlFor="factory-name">Factory name</FieldLabel>
+                <Input
+                  id="factory-name"
+                  name="factory-name"
+                  className={monoInputClass}
+                  value={name}
+                  onChange={(e) => {
+                    const v = sanitizeFactoryNameInput(e.target.value)
+                    const next: Partial<StackBuilderSelections> = { name: v }
+                    const path = syncPackagePathFromName(v)
+                    if (path) next.packagePath = path
+                    patch(next)
+                  }}
+                  onBlur={() => {
+                    const v = finalizeFactoryName(name)
+                    if (v === name) return
+                    const next: Partial<StackBuilderSelections> = { name: v }
+                    const path = syncPackagePathFromName(v)
+                    if (path) next.packagePath = path
+                    patch(next)
+                  }}
+                  placeholder="my-factory"
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  translate="no"
+                />
+              </Field>
+
+              <Field>
+                <FieldTitle id="pm-label">Package manager</FieldTitle>
+                <ToggleGroup
+                  aria-labelledby="pm-label"
+                  value={[pm]}
+                  onValueChange={(vals) => {
+                    const next = vals[0] as PackageManager | undefined
+                    if (next) patch({ pm: next })
+                  }}
+                  variant="outline"
+                  size="sm"
+                  spacing={1}
+                  className="flex-wrap"
+                >
+                  {PACKAGE_MANAGERS.map((m) => (
+                    <ToggleGroupItem
+                      key={m}
+                      value={m}
+                      className="font-mono text-[10px] tracking-wide uppercase"
+                    >
+                      {m}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </Field>
+
+              <FieldSet className="gap-3">
+                <FieldLegend variant="label">Install mode</FieldLegend>
+                <RadioGroup
+                  value={installMode}
+                  onValueChange={(value) =>
+                    patch({ installMode: value as InstallMode })
+                  }
+                  className="grid gap-2"
+                >
+                  <FieldLabel htmlFor="install-new">
+                    <Field orientation="horizontal">
+                      <RadioGroupItem value="new" id="install-new" />
+                      <FieldContent>
+                        <FieldTitle>New directory</FieldTitle>
+                        <FieldDescription>
+                          ./{name || "my-factory"}
+                        </FieldDescription>
+                      </FieldContent>
+                    </Field>
+                  </FieldLabel>
+                  <FieldLabel htmlFor="install-in-place">
+                    <Field orientation="horizontal">
+                      <RadioGroupItem value="in-place" id="install-in-place" />
+                      <FieldContent>
+                        <FieldTitle>Into this repository</FieldTitle>
+                        <FieldDescription>
+                          Own package tree, not your Next app
+                        </FieldDescription>
+                      </FieldContent>
+                    </Field>
+                  </FieldLabel>
+                </RadioGroup>
+              </FieldSet>
+
+              {installMode === "in-place" ? (
+                <Field>
+                  <FieldLabel htmlFor="package-path">
+                    Path inside Target Repository
+                  </FieldLabel>
+                  <Input
+                    id="package-path"
+                    name="package-path"
+                    className={monoInputClass}
+                    value={packagePath}
+                    onChange={(e) => patch({ packagePath: e.target.value })}
+                    placeholder="apps/factory"
+                    autoComplete="off"
+                    spellCheck={false}
+                    translate="no"
+                  />
+                </Field>
+              ) : null}
+
+              <FieldSet className="gap-3">
+                <FieldLegend variant="label">Work Item Store</FieldLegend>
+                <RadioGroup
+                  value={store}
+                  onValueChange={(value) =>
+                    patch({ store: value as WorkItemStoreId })
+                  }
+                  className="grid gap-2"
+                >
+                  {STORES.map((s) => (
+                    <FieldLabel key={s.id} htmlFor={`store-${s.id}`}>
+                      <Field orientation="horizontal">
+                        <RadioGroupItem value={s.id} id={`store-${s.id}`} />
+                        <FieldContent>
+                          <FieldTitle>{s.label}</FieldTitle>
+                          <FieldDescription>{s.hint}</FieldDescription>
+                        </FieldContent>
+                      </Field>
+                    </FieldLabel>
+                  ))}
+                </RadioGroup>
+              </FieldSet>
+
+              <FieldSet className="gap-3">
+                <FieldLegend variant="label">Channels</FieldLegend>
+                <div className="flex flex-col gap-2">
+                  <div className="border-border bg-muted/40 text-muted-foreground border px-3 py-2.5 text-xs">
+                    eve TUI / HTTP — always included
+                  </div>
+                  <FieldLabel htmlFor="channel-slack">
+                    <Field orientation="horizontal">
+                      <Checkbox
+                        id="channel-slack"
+                        name="channel-slack"
+                        checked={slack}
+                        onCheckedChange={(checked) =>
+                          patch({ slack: checked === true })
+                        }
+                      />
+                      <FieldContent>
+                        <FieldTitle>Slack</FieldTitle>
+                        <FieldDescription>
+                          After install run{" "}
+                          <Kbd className="font-mono" translate="no">
+                            eve channels add slack
+                          </Kbd>
+                        </FieldDescription>
+                      </FieldContent>
+                    </Field>
+                  </FieldLabel>
+                </div>
+              </FieldSet>
+            </FieldGroup>
+            </div>
+          </ScrollArea>
+
+          <div className="border-border bg-muted/20 flex shrink-0 flex-col gap-3 border-t p-4">
+            <div className="text-[10px] font-semibold tracking-widest uppercase">
+              Your command
+            </div>
+            <pre
+              className="border-border bg-card max-h-28 overflow-auto border p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap"
+              translate="no"
+            >
+              {command}
+            </pre>
+            <Button
+              type="button"
+              className="w-full"
+              onClick={copy}
+              aria-label={
+                copied ? "Command copied to clipboard" : "Copy create command"
+              }
+            >
+              {copied ? "Copied" : "Copy command"}
+            </Button>
+            <span className="sr-only" aria-live="polite">
+              {copied ? "Command copied to clipboard" : ""}
+            </span>
+          </div>
+        </aside>
+
+        <div
+          className="bg-background flex min-h-0 flex-col overflow-hidden p-4"
+          aria-label="Install preview"
+        >
+          <StackPreviewTree stack={stack} className="min-h-0 flex-1" />
         </div>
-
-        <ol className="text-muted-foreground list-decimal space-y-1 pl-4 text-xs leading-relaxed">
-          <li>Run the command in your terminal (or Target Repository root).</li>
-          <li>
-            <code className="text-foreground font-mono">cp .env.example .env</code>{" "}
-            and add model + Store credentials.
-          </li>
-          <li>
-            <code className="text-foreground font-mono">pnpm install && pnpm dev</code>{" "}
-            — talk to Root in the eve TUI.
-          </li>
-        </ol>
       </div>
     </div>
   )
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
+function StackBuilderShell() {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="text-xs font-semibold tracking-widest uppercase">
-        {label}
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function Choice({
-  active,
-  title,
-  hint,
-  onClick,
-}: {
-  active: boolean
-  title: string
-  hint: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-none border px-3 py-3 text-left transition-colors",
-        active
-          ? "border-primary bg-primary/5"
-          : "border-border hover:bg-muted/40",
-      )}
+    <div
+      className="border-border flex h-full w-full flex-col overflow-hidden border-0 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]"
+      aria-busy
+      aria-label="Loading saved selections"
     >
-      <div className="text-sm font-medium">{title}</div>
-      <div className="text-muted-foreground mt-0.5 text-xs">{hint}</div>
-    </button>
+      <SiteHeader
+        actions={
+          <div className="border-border h-9 w-[4.5rem] border opacity-40" />
+        }
+      />
+      <div className="grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)]">
+        <aside className="border-border border-b lg:border-r lg:border-b-0" />
+        <div className="bg-background" />
+      </div>
+    </div>
   )
 }
-
-const inputClass =
-  "border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-ring/30 w-full rounded-none border px-3 py-2 font-mono text-sm outline-none focus-visible:ring-2"

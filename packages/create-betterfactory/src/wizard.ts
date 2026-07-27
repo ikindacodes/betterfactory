@@ -72,8 +72,8 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
       placeholder: "my-factory",
       initialValue: flags.name ?? "my-factory",
       validate: (v) => {
-        if (!v || !/^[a-zA-Z0-9@/_-]+$/.test(v)) {
-          return "Use a simple package or path-friendly name";
+        if (!v || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(v)) {
+          return "Use lowercase letters, numbers, and hyphens (e.g. my-factory)";
         }
       },
     }),
