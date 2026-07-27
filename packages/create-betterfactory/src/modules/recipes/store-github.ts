@@ -339,26 +339,45 @@ export const storeGithubRecipe: ModuleRecipe = {
     "agent/subagents/reviewer/tools/get_work_item.ts": getWorkItem,
     "agent/subagents/reviewer/tools/comment_work_item.ts": commentWorkItem,
     "agent/subagents/reviewer/tools/set_ready_for_handoff.ts": setReady,
-    "agent/subagents/planner/skills/github-store.md": `---
-description: How to use the GitHub Issues Work Item Store. Load before creating or updating Work Items.
+    "agent/subagents/planner/skills/file-github.md": `---
+description: File to GitHub Issues. Use when creating or updating a GitHub issue.
 ---
 
-# GitHub Work Item Store
+# File GitHub
 
-- \`create_work_item\` — create issue (approval required). Leave ready unset.
-- \`update_work_item\` — update title/body (approval required). Provide full body fields when changing content.
-- \`get_work_item\` — read issue for context.
-- Do **not** use \`set_ready_for_handoff\` — that is the Reviewer's gate.
+Map canonical fields into a GitHub Issue. **Done** when the issue exists with full body sections and Ready for Handoff left unset for Reviewer.
+
+## Tools
+
+| Tool | Use |
+|------|-----|
+| \`create_work_item\` | New issue (approval required) |
+| \`update_work_item\` | Title/body (approval required; send all body fields when changing content) |
+| \`get_work_item\` | Read for context |
+
+## Rules
+
+- Body sections: Context, Outcome, Acceptance criteria, Constraints, Pointers, Handoff notes.
+- Reviewer owns Ready for Handoff via \`set_ready_for_handoff\` / the \`ready-for-handoff\` label.
 `,
-    "agent/subagents/reviewer/skills/github-review.md": `---
-description: How to review GitHub Work Items. Load before reviewing.
+    "agent/subagents/reviewer/skills/gate-github.md": `---
+description: Gate Ready for Handoff on GitHub Issues. Use when cold-reading a GitHub issue for the Reviewer gate.
 ---
 
-# Reviewing GitHub Work Items
+# Gate GitHub
 
-- \`get_work_item\` — cold-read the issue body.
-- \`comment_work_item\` — leave feedback; do not rewrite the issue body.
-- \`set_ready_for_handoff\` — set \`ready: true|false\` via the \`ready-for-handoff\` label.
+Cold-read and gate. **Done** when every Ready for Handoff bar is scored, feedback is commented if needed, and the ready label matches the result.
+
+## Steps
+
+1. \`get_work_item\` — load issue body only.
+2. Load \`check-ready-for-handoff\` — score every bar pass/fail with a one-line reason.
+3. Any fail: \`comment_work_item\` with blockers; \`set_ready_for_handoff\` ready false.
+4. All pass: \`set_ready_for_handoff\` ready true; brief confirm.
+
+## Rules
+
+- Comment suggested wording; Planner rewrites bodies.
 - Create the \`ready-for-handoff\` label in the repo if the API rejects unknown labels.
 `,
   },

@@ -180,24 +180,45 @@ export const storeMarkdownRecipe: ModuleRecipe = {
     "agent/subagents/reviewer/tools/get_work_item.ts": getWorkItem,
     "agent/subagents/reviewer/tools/comment_work_item.ts": commentWorkItem,
     "agent/subagents/reviewer/tools/set_ready_for_handoff.ts": setReady,
-    "agent/subagents/planner/skills/markdown-store.md": `---
-description: Markdown folder Work Item Store. Load before filing.
+    "agent/subagents/planner/skills/file-markdown.md": `---
+description: File to issues/*.md. Use when creating or updating a markdown issue file.
 ---
 
-# Markdown Work Item Store
+# File Markdown
 
-- Files live under \`issues/*.md\`.
-- \`create_work_item\` / \`update_work_item\` — no remote approval.
-- Leave \`readyForHandoff: false\` for Reviewer.
+Write canonical fields under \`issues/*.md\`. **Done** when the file exists with full body sections and \`readyForHandoff: false\` for Reviewer.
+
+## Tools
+
+| Tool | Use |
+|------|-----|
+| \`create_work_item\` | New \`issues/<slug>.md\` (no remote approval) |
+| \`update_work_item\` | Rewrite title + body by filename id |
+| \`get_work_item\` | Read for context |
+
+## Rules
+
+- Body sections: Context, Outcome, Acceptance criteria, Constraints, Pointers, Handoff notes.
+- Reviewer owns Ready for Handoff via \`set_ready_for_handoff\`.
 `,
-    "agent/subagents/reviewer/skills/markdown-review.md": `---
-description: Review markdown Work Items. Load before reviewing.
+    "agent/subagents/reviewer/skills/gate-markdown.md": `---
+description: Gate Ready for Handoff on issues/*.md. Use when cold-reading a markdown issue file for the Reviewer gate.
 ---
 
-# Reviewing markdown Work Items
+# Gate Markdown
 
-- \`get_work_item\` then \`comment_work_item\` / \`set_ready_for_handoff\`.
-- Do not rewrite the main body; comment and gate only.
+Cold-read and gate. **Done** when every Ready for Handoff bar is scored, feedback is appended if needed, and frontmatter \`readyForHandoff\` matches the result.
+
+## Steps
+
+1. \`get_work_item\` — load file body only.
+2. Load \`check-ready-for-handoff\` — score every bar pass/fail with a one-line reason.
+3. Any fail: \`comment_work_item\` with blockers; \`set_ready_for_handoff\` ready false.
+4. All pass: \`set_ready_for_handoff\` ready true; brief confirm.
+
+## Rules
+
+- Append review comments; Planner rewrites the main body.
 `,
   },
 };

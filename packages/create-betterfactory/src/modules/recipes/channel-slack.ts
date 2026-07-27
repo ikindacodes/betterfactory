@@ -10,19 +10,27 @@ export const channelSlackRecipe: ModuleRecipe = {
   description: "Optional Slack surface (setup via eve channels add slack)",
   provides: { channel: "slack" },
   files: {
-    "agent/skills/slack-surface.md": `---
-description: Notes for operating this factory from Slack once the channel is configured.
+    "agent/skills/operate-from-slack.md": `---
+description: Operate this factory from Slack. Use when adding or using the Slack channel.
 ---
 
-# Slack surface
+# Operate from Slack
 
-After Install, add the Slack channel from the factory package root:
+Same Root as the eve TUI — Work Item flow is unchanged. **Done** for setup when \`eve channels add slack\` has finished Connect.
+
+## Setup
+
+From the factory package root:
 
 \`\`\`bash
 npx eve channels add slack
 \`\`\`
 
-Prefer Vercel Connect for credentials. The same Root handles Slack and the eve TUI — Work Item flow is unchanged.
+Prefer Vercel Connect for credentials.
+
+## Runtime
+
+Treat Slack messages as Root intake. Route to Planner and Reviewer as usual.
 `,
 
     "SLACK.md": `# Slack channel

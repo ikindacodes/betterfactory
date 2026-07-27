@@ -66,28 +66,42 @@ export const storeLinearRecipe: ModuleRecipe = {
     "agent/subagents/planner/connections/linear.ts": linearConnection,
     "agent/subagents/reviewer/connections/linear.ts": linearConnection,
     "agent/subagents/planner/tools/format_work_item_markdown.ts": formatTool,
-    "agent/subagents/planner/skills/linear-store.md": `---
-description: How to use Linear as the Work Item Store. Load before filing Work Items.
+    "agent/subagents/planner/skills/file-linear.md": `---
+description: File to Linear. Use when creating or updating a Linear issue.
 ---
 
-# Linear Work Item Store
+# File Linear
 
-Use Linear MCP tools (\`linear__*\` after discovery):
+Map canonical fields into a Linear issue. **Done** when the issue exists with full description sections and Ready for Handoff left for Reviewer.
 
-- Create/update issues with the canonical Work Item sections in the description (Context, Outcome, Acceptance criteria, Constraints, Pointers, Handoff notes).
-- Use \`format_work_item_markdown\` to build the description body.
-- Writes require human approval — expected.
-- Do **not** mark Ready for Handoff yourself; Reviewer gates readiness (prefer a \`ready-for-handoff\` label if available).
+## Steps
+
+1. Discover Linear MCP tools (\`linear__*\`).
+2. Build the description with \`format_work_item_markdown\` (Context, Outcome, Acceptance criteria, Constraints, Pointers, Handoff notes).
+3. Create or update the issue via Linear tools. Writes need human approval — expected.
+
+## Rules
+
+- Reviewer owns Ready for Handoff (prefer a \`ready-for-handoff\` label when available).
 `,
-    "agent/subagents/reviewer/skills/linear-review.md": `---
-description: How to review Linear Work Items. Load before reviewing.
+    "agent/subagents/reviewer/skills/gate-linear.md": `---
+description: Gate Ready for Handoff on Linear. Use when cold-reading a Linear issue for the Reviewer gate.
 ---
 
-# Reviewing Linear Work Items
+# Gate Linear
 
-- Read the issue via Linear tools; comment with feedback.
-- Gate Ready for Handoff with a label or agreed status field — do not freely rewrite the issue body.
-- Suggest wording in comments for the Planner to apply.
+Cold-read and gate. **Done** when every Ready for Handoff bar is scored, feedback is commented if needed, and the ready label/status matches the result.
+
+## Steps
+
+1. Read the issue via Linear MCP tools — body only.
+2. Load \`check-ready-for-handoff\` — score every bar pass/fail with a one-line reason.
+3. Any fail: comment blockers; clear Ready for Handoff.
+4. All pass: set Ready for Handoff (label or agreed status field); brief confirm.
+
+## Rules
+
+- Comment suggested wording; Planner rewrites bodies.
 `,
   },
 };
