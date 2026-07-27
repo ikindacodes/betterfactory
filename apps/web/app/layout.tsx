@@ -1,11 +1,11 @@
+import { GeistPixelSquare } from "geist/font/pixel"
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import { GeistPixelSquare } from "geist/font/pixel"
 
-import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SITE } from "@/lib/site"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
+import "@workspace/ui/globals.css"
 import { cn } from "@workspace/ui/lib/utils"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
@@ -74,13 +74,14 @@ export default function RootLayout({
         "font-sans",
         geist.variable,
         fontMono.variable,
-        GeistPixelSquare.variable,
+        GeistPixelSquare.variable
       )}
     >
       <body className="min-h-svh touch-manipulation">
         <ThemeProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )

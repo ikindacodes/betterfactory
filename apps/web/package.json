@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "@workspace/ui": "workspace:*",
     "create-betterfactory": "workspace:*",
     "geist": "^1.7.2",
