@@ -7,7 +7,7 @@ import {
   type InstallMode,
   type PackageManager,
   type StackConfig,
-  type WorkItemStoreId,
+  type TicketsId,
 } from "create-betterfactory/modules"
 import { SiteHeader } from "@/components/site-header"
 import { StackPreviewTree } from "@/components/stack-preview-tree"
@@ -54,8 +54,8 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@workspace/ui/components/toggle-group"
-const STORES: {
-  id: WorkItemStoreId
+const TICKET_OPTIONS: {
+  id: TicketsId
   label: string
   hint: string
 }[] = [
@@ -109,7 +109,7 @@ export function StackBuilder() {
     }
   }, [])
 
-  const { name, installMode, packagePath, store, slack, pm } = selections
+  const { name, installMode, packagePath, tickets, slack, pm } = selections
 
   function patch(partial: Partial<StackBuilderSelections>) {
     setSelections((prev) => ({ ...prev, ...partial }))
@@ -128,11 +128,11 @@ export function StackBuilder() {
     return {
       name: name.trim() || "my-factory",
       installMode,
-      store,
+      tickets,
       channels,
       packagePath: installMode === "in-place" ? packagePath : undefined,
     }
-  }, [name, installMode, packagePath, store, slack])
+  }, [name, installMode, packagePath, tickets, slack])
 
   const command = useMemo(
     () => buildCreateCommand(stack, { packageManager: pm }),
@@ -177,7 +177,7 @@ export function StackBuilder() {
           <AlertDialogTitle>Reset selections?</AlertDialogTitle>
           <AlertDialogDescription>
             This clears your saved Stack Builder choices in this browser and
-            restores the defaults (name, package manager, install mode, store,
+            restores the defaults (name, package manager, install mode, tickets,
             and channels).
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -317,16 +317,16 @@ export function StackBuilder() {
               <FieldSet className="gap-3">
                 <FieldLegend variant="label">Tickets</FieldLegend>
                 <RadioGroup
-                  value={store}
+                  value={tickets}
                   onValueChange={(value) =>
-                    patch({ store: value as WorkItemStoreId })
+                    patch({ tickets: value as TicketsId })
                   }
                   className="grid gap-2"
                 >
-                  {STORES.map((s) => (
-                    <FieldLabel key={s.id} htmlFor={`store-${s.id}`}>
+                  {TICKET_OPTIONS.map((s) => (
+                    <FieldLabel key={s.id} htmlFor={`tickets-${s.id}`}>
                       <Field orientation="horizontal">
-                        <RadioGroupItem value={s.id} id={`store-${s.id}`} />
+                        <RadioGroupItem value={s.id} id={`tickets-${s.id}`} />
                         <FieldContent>
                           <FieldTitle>{s.label}</FieldTitle>
                           <FieldDescription>{s.hint}</FieldDescription>

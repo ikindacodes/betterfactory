@@ -1,7 +1,7 @@
 import type {
   InstallMode,
   PackageManager,
-  WorkItemStoreId,
+  TicketsId,
 } from "create-betterfactory/modules"
 
 export const STACK_BUILDER_STORAGE_KEY = "betterfactory.stack-builder.v1"
@@ -10,7 +10,7 @@ export type StackBuilderSelections = {
   name: string
   installMode: InstallMode
   packagePath: string
-  store: WorkItemStoreId
+  tickets: TicketsId
   slack: boolean
   pm: PackageManager
 }
@@ -19,13 +19,13 @@ export const DEFAULT_STACK_SELECTIONS: StackBuilderSelections = {
   name: "my-factory",
   installMode: "new",
   packagePath: "apps/my-factory",
-  store: "github",
+  tickets: "github",
   slack: false,
   pm: "npm",
 }
 
 const INSTALL_MODES = new Set<InstallMode>(["new", "in-place"])
-const STORES = new Set<WorkItemStoreId>(["github", "linear", "markdown"])
+const TICKETS = new Set<TicketsId>(["github", "linear", "markdown"])
 const PMS = new Set<PackageManager>(["npm", "pnpm", "bun", "yarn"])
 
 function asString(value: unknown, fallback: string): string {
@@ -60,7 +60,7 @@ export function finalizeFactoryName(raw: string): string {
   return cleaned || DEFAULT_STACK_SELECTIONS.name
 }
 
-/** Parse + validate stored JSON; unknown or corrupt data falls back to defaults. */
+/** Parse + validate JSON; unknown or corrupt data falls back to defaults. */
 export function parseStackSelections(raw: unknown): StackBuilderSelections {
   if (!raw || typeof raw !== "object") {
     return { ...DEFAULT_STACK_SELECTIONS }
@@ -68,7 +68,8 @@ export function parseStackSelections(raw: unknown): StackBuilderSelections {
 
   const o = raw as Record<string, unknown>
   const installMode = o.installMode
-  const store = o.store
+  // Migrate legacy `store` key from earlier Stack Builder builds
+  const ticketsRaw = o.tickets ?? o.store
   const pm = o.pm
 
   const name =
@@ -84,10 +85,10 @@ export function parseStackSelections(raw: unknown): StackBuilderSelections {
     packagePath:
       asString(o.packagePath, DEFAULT_STACK_SELECTIONS.packagePath) ||
       DEFAULT_STACK_SELECTIONS.packagePath,
-    store:
-      typeof store === "string" && STORES.has(store as WorkItemStoreId)
-        ? (store as WorkItemStoreId)
-        : DEFAULT_STACK_SELECTIONS.store,
+    tickets:
+      typeof ticketsRaw === "string" && TICKETS.has(ticketsRaw as TicketsId)
+        ? (ticketsRaw as TicketsId)
+        : DEFAULT_STACK_SELECTIONS.tickets,
     slack: typeof o.slack === "boolean" ? o.slack : DEFAULT_STACK_SELECTIONS.slack,
     pm:
       typeof pm === "string" && PMS.has(pm as PackageManager)

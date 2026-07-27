@@ -47,7 +47,7 @@ pnpm --filter create-betterfactory build
 pnpm --filter create-betterfactory start
 
 # Non-interactive dry-run
-node packages/create-betterfactory/dist/cli.js my-factory -y --store markdown --dry-run
+node packages/create-betterfactory/dist/cli.js my-factory -y --tickets markdown --dry-run
 
 # List modules
 node packages/create-betterfactory/dist/cli.js --list-modules
@@ -56,7 +56,7 @@ node packages/create-betterfactory/dist/cli.js --list-modules
 ### Create a factory into `/tmp`
 
 ```bash
-node packages/create-betterfactory/dist/cli.js demo-factory -y --store markdown
+node packages/create-betterfactory/dist/cli.js demo-factory -y --tickets markdown
 cd demo-factory && pnpm install && pnpm dev
 ```
 

@@ -4,7 +4,7 @@ import type {
   ChannelId,
   InstallMode,
   StackConfig,
-  WorkItemStoreId,
+  TicketsId,
 } from "./modules/types.js";
 import {
   detectPackageManager,
@@ -14,7 +14,7 @@ import {
 export interface WizardFlags {
   name?: string;
   yes?: boolean;
-  store?: WorkItemStoreId;
+  tickets?: TicketsId;
   channel?: string;
   install?: InstallMode;
   packagePath?: string;
@@ -49,7 +49,7 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
     return {
       name,
       installMode: flags.install ?? "new",
-      store: flags.store ?? "github",
+      tickets: flags.tickets ?? "github",
       channels,
       packagePath: flags.packagePath,
       packageManager: detected,
@@ -112,10 +112,10 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
     );
   }
 
-  const store = assertNotCancel(
+  const tickets = assertNotCancel(
     await p.select({
       message: "Tickets",
-      initialValue: flags.store ?? "github",
+      initialValue: flags.tickets ?? "github",
       options: [
         {
           value: "github" as const,
@@ -165,7 +165,7 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
   return {
     name,
     installMode,
-    store,
+    tickets,
     channels,
     packagePath,
     packageManager,

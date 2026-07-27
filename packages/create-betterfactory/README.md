@@ -18,7 +18,7 @@ After scaffolding, the CLI **copies `.env.example` → `.env`** and runs **depen
 # Interactive wizard (asks for package manager)
 npx create-betterfactory@latest
 
-# Non-interactive defaults (GitHub Issues store, new directory, npm install)
+# Non-interactive defaults (GitHub Issues tickets, new directory, npm install)
 npx create-betterfactory@latest my-factory -y
 
 # Prefer pnpm
@@ -27,7 +27,7 @@ npx create-betterfactory@latest my-factory -y --pm pnpm
 pnpm create betterfactory@latest my-factory -y
 
 # Markdown tickets, dry-run (print files only — no write/install)
-npx create-betterfactory@latest my-factory -y --store markdown --dry-run
+npx create-betterfactory@latest my-factory -y --tickets markdown --dry-run
 
 # Into an existing monorepo
 npx create-betterfactory@latest my-factory -y \
@@ -53,7 +53,7 @@ bun create create-betterfactory@latest
 |------|-------------|
 | `[name]` | Factory name / directory |
 | `-y, --yes` | Non-interactive defaults |
-| `--store <store>` | `github` (default), `linear`, or `markdown` |
+| `--tickets <tickets>` | `github` (default), `linear`, or `markdown` |
 | `--channel <list>` | Extra channels, comma-separated (e.g. `slack`) |
 | `--install <mode>` | Scaffold mode: `new` (default) or `in-place` |
 | `--package-path <path>` | Path for in-place install (default `apps/<name>`) |
@@ -80,7 +80,7 @@ After scaffolding:
 
 ```bash
 cd my-factory   # or your --package-path
-# .env is already created — add AI_GATEWAY_API_KEY (and store creds)
+# .env is already created — add AI_GATEWAY_API_KEY (and ticket backend creds)
 pnpm dev        # or npm run dev / yarn dev / bun run dev
 ```
 
@@ -102,7 +102,7 @@ import { buildCreateCommand } from "create-betterfactory/modules";
 const stack: StackConfig = {
   name: "my-factory",
   installMode: "new",
-  store: "github",
+  tickets: "github",
   channels: ["eve"],
 };
 

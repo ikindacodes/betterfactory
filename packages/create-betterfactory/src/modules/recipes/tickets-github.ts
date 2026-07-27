@@ -327,11 +327,11 @@ export default defineTool({
 });
 `;
 
-export const storeGithubRecipe: ModuleRecipe = {
-  id: "store-github",
+export const ticketsGithubRecipe: ModuleRecipe = {
+  id: "tickets-github",
   label: "GitHub Issues",
   description: "Tickets as GitHub Issues (default)",
-  provides: { store: "github" },
+  provides: { tickets: "github" },
   files: {
     "agent/subagents/planner/tools/create_ticket.ts": createTicket,
     "agent/subagents/planner/tools/update_ticket.ts": updateTicket,

@@ -56,11 +56,11 @@ export default defineTool({
 });
 `;
 
-export const storeLinearRecipe: ModuleRecipe = {
-  id: "store-linear",
+export const ticketsLinearRecipe: ModuleRecipe = {
+  id: "tickets-linear",
   label: "Linear",
   description: "Tickets via Linear MCP connection (writes need approval)",
-  provides: { store: "linear" },
+  provides: { tickets: "linear" },
   files: {
     // Subagents do not inherit root connections — install on both specialists.
     "agent/subagents/planner/connections/linear.ts": linearConnection,

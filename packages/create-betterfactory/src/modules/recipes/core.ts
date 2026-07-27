@@ -104,7 +104,7 @@ export const coreRecipe: ModuleRecipe = {
         "AI_GATEWAY_API_KEY=",
         "",
       ];
-      if (stack.store === "github") {
+      if (stack.tickets === "github") {
         lines.push(
           "# GitHub tickets (Issues API)",
           "GITHUB_TOKEN=",
@@ -113,7 +113,7 @@ export const coreRecipe: ModuleRecipe = {
           "",
         );
       }
-      if (stack.store === "linear") {
+      if (stack.tickets === "linear") {
         lines.push("# Linear tickets", "LINEAR_API_KEY=", "");
       }
       if (stack.channels.includes("slack")) {
@@ -142,7 +142,7 @@ This factory turns intent into **tickets** (not application code) and gates them
 
 ## Stack
 
-- **Tickets:** \`${stack.store}\`
+- **Tickets:** \`${stack.tickets}\`
 - **Channels:** ${stack.channels.map((c) => `\`${c}\``).join(", ")}
 
 ## Quick start

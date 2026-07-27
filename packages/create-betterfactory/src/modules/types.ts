@@ -1,5 +1,8 @@
 /** Stack axes the Wizard collects (v0). */
-export type WorkItemStoreId = "github" | "linear" | "markdown";
+export type TicketsId = "github" | "linear" | "markdown";
+
+/** @deprecated Use TicketsId */
+export type WorkItemStoreId = TicketsId;
 
 export type ChannelId = "eve" | "slack";
 
@@ -11,7 +14,8 @@ export interface StackConfig {
   /** Package / directory name for the factory. */
   name: string;
   installMode: InstallMode;
-  store: WorkItemStoreId;
+  /** Where tickets are filed: GitHub, Linear, or markdown. */
+  tickets: TicketsId;
   /** Always includes "eve". Optional extras. */
   channels: ChannelId[];
   /** Relative path inside Target when using monorepo-friendly layout. */
@@ -37,7 +41,7 @@ export interface ModuleRecipe {
   always?: boolean;
   /** Stack axis this recipe satisfies. */
   provides?: {
-    store?: WorkItemStoreId;
+    tickets?: TicketsId;
     channel?: ChannelId;
     core?: true;
   };

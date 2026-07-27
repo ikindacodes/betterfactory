@@ -18,7 +18,7 @@ export function selectRecipes(stack: StackConfig): ModuleRecipe[] {
 
   return allRecipes.filter((recipe) => {
     if (recipe.always) return true;
-    if (recipe.provides?.store === stack.store) return true;
+    if (recipe.provides?.tickets === stack.tickets) return true;
     if (recipe.provides?.channel && channels.has(recipe.provides.channel)) {
       // eve channel is always provided by core files, not channel-slack
       return recipe.provides.channel !== "eve";

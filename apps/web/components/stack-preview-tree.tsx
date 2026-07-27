@@ -142,10 +142,10 @@ export function StackPreviewTree({ stack, className }: StackPreviewTreeProps) {
 
   const treeKey = useMemo(
     () =>
-      [rootName, stack.store, stack.channels.join(","), livePaths.length].join(
+      [rootName, stack.tickets, stack.channels.join(","), livePaths.length].join(
         "|",
       ),
-    [rootName, stack.store, stack.channels, livePaths.length],
+    [rootName, stack.tickets, stack.channels, livePaths.length],
   )
 
   const previewBody = files[selectedPath] ?? "// File not in this stack."

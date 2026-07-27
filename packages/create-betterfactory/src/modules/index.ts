@@ -6,6 +6,7 @@ export type {
   InstallMode,
   ModuleRecipe,
   StackConfig,
+  TicketsId,
   WorkItemStoreId,
 } from "./types.js";
 

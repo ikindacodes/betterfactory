@@ -166,12 +166,12 @@ export default defineTool({
 });
 `;
 
-export const storeMarkdownRecipe: ModuleRecipe = {
-  id: "store-markdown",
+export const ticketsMarkdownRecipe: ModuleRecipe = {
+  id: "tickets-markdown",
   label: "Markdown folder",
   description:
     "Tickets as markdown files under tickets/ (no remote write approval)",
-  provides: { store: "markdown" },
+  provides: { tickets: "markdown" },
   files: {
     "tickets/.gitkeep": "",
     "agent/subagents/planner/tools/create_ticket.ts": createTicket,

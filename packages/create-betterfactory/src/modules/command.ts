@@ -65,11 +65,11 @@ export function buildCreateCommand(
     // default is new; only emit when we want explicitness — skip for shorter commands
   }
 
-  if (stack.store && stack.store !== "github") {
-    parts.push("--store", stack.store);
+  if (stack.tickets && stack.tickets !== "github") {
+    parts.push("--tickets", stack.tickets);
   } else if (nonInteractive) {
     // Explicit default helps Stack Builder show full fidelity
-    parts.push("--store", "github");
+    parts.push("--tickets", "github");
   }
 
   const extras = stack.channels.filter((c) => c !== "eve");

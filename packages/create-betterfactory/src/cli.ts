@@ -6,7 +6,7 @@ import path from "node:path";
 import {
   listCatalog,
   composeStack,
-  type WorkItemStoreId,
+  type TicketsId,
   type InstallMode,
 } from "./modules/index.js";
 import { runWizard, type WizardFlags } from "./wizard.js";
@@ -31,7 +31,7 @@ program
   .argument("[name]", "Factory name / directory")
   .option("-y, --yes", "Use defaults (non-interactive)")
   .option(
-    "--store <store>",
+    "--tickets <tickets>",
     "Tickets backend: github | linear | markdown",
     "github",
   )
@@ -69,7 +69,7 @@ program
       for (const m of catalog) {
         const flags = [
           m.always ? "always" : null,
-          m.provides.store ? `store:${m.provides.store}` : null,
+          m.provides.tickets ? `tickets:${m.provides.tickets}` : null,
           m.provides.channel ? `channel:${m.provides.channel}` : null,
         ]
           .filter(Boolean)
@@ -82,9 +82,9 @@ program
       return;
     }
 
-    const store = opts.store as WorkItemStoreId;
-    if (!["github", "linear", "markdown"].includes(store)) {
-      console.error(`Invalid --store: ${store}`);
+    const tickets = opts.tickets as TicketsId;
+    if (!["github", "linear", "markdown"].includes(tickets)) {
+      console.error(`Invalid --tickets: ${tickets}`);
       process.exit(1);
     }
 
@@ -104,7 +104,7 @@ program
     const flags: WizardFlags = {
       name,
       yes: Boolean(opts.yes),
-      store,
+      tickets,
       channel: opts.channel,
       install: installMode,
       packagePath: opts.packagePath,
