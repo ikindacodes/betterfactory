@@ -17,7 +17,9 @@ import {
   devCommand,
   installCommand,
   isPackageManager,
+  openShellInDirectory,
   runDependencyInstall,
+  runEveAddSlackChannel,
   type PackageManager,
 } from "./package-manager.js";
 
@@ -59,6 +61,10 @@ program
   .option(
     "--skip-env",
     "Skip copying .env.example → .env",
+  )
+  .option(
+    "--no-shell",
+    "Do not open a shell in the factory directory after a new install",
   )
   .option("--force", "Overwrite an existing agent/ tree")
   .option("--dry-run", "Compose Stack and print files without writing")
@@ -130,14 +136,18 @@ program
         return;
       }
 
+      const startCwd = process.cwd();
       const s = p.spinner();
       s.start("Composing Modules and writing factory…");
       const { targetDir, files } = await installFactory(
-        process.cwd(),
+        startCwd,
         stack,
         { force: flags.force },
       );
       s.stop(`Wrote ${files.length} files`);
+
+      // Subsequent steps run as if we already live in the factory package.
+      process.chdir(targetDir);
 
       if (!opts.skipEnv) {
         s.start("Creating .env from .env.example…");
@@ -168,13 +178,49 @@ program
         }
       }
 
-      const rel = path.relative(process.cwd(), targetDir) || ".";
+      let slackOk = false;
+      if (stack.channels.includes("slack")) {
+        if (installOk) {
+          p.log.info("Adding Slack channel (eve channels add slack -y)…");
+          try {
+            await runEveAddSlackChannel(targetDir);
+            slackOk = true;
+            p.log.success(
+              "Slack channel scaffolded. Finish Connect / OAuth when ready (see SLACK.md).",
+            );
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            p.log.warn(
+              `Could not run eve channels add slack: ${message}\n` +
+                `From the factory directory: npx eve channels add slack -y`,
+            );
+          }
+        } else {
+          p.log.warn(
+            "Slack was selected but dependencies are not installed yet.\n" +
+              "After install, run: npx eve channels add slack -y",
+          );
+        }
+      }
+
+      const displayPath =
+        path.relative(startCwd, targetDir) || path.basename(targetDir);
+
+      const wantsShell =
+        stack.installMode === "new" &&
+        opts.shell !== false &&
+        Boolean(process.stdout.isTTY && process.stdin.isTTY) &&
+        !process.env.CI;
+
       const nextSteps = [
-        `cd ${rel}`,
+        wantsShell ? null : `cd ${displayPath}`,
         opts.skipEnv
           ? "cp .env.example .env"
           : "# Edit .env with your API keys",
         installOk ? null : installCommand(pm).label,
+        stack.channels.includes("slack") && !slackOk
+          ? "npx eve channels add slack -y"
+          : null,
         `${devCommand(pm)}   # eve TUI`,
       ].filter((line): line is string => line != null);
 
@@ -183,6 +229,15 @@ program
         pc.green("Software Factory ready.") +
           pc.dim(" You own it — plan tickets, gate Ready for Handoff."),
       );
+
+      // A child process cannot change the parent shell's cwd. For new
+      // directory installs on a TTY, open a nested shell in the factory.
+      if (wantsShell) {
+        p.log.info(
+          `Opening a shell in ${pc.cyan(path.basename(targetDir))} — type ${pc.bold("exit")} to leave.`,
+        );
+        await openShellInDirectory(targetDir);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       p.cancel(message);

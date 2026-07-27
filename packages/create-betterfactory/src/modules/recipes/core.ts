@@ -118,8 +118,8 @@ export const coreRecipe: ModuleRecipe = {
       }
       if (stack.channels.includes("slack")) {
         lines.push(
-          "# Slack channel — prefer Vercel Connect in production",
-          "# See https://eve.dev/docs after `eve channels add slack`",
+          "# Slack channel — create-betterfactory runs `eve channels add slack -y`",
+          "# Finish Connect / OAuth (prefer Vercel Connect). See SLACK.md",
           "",
         );
       }

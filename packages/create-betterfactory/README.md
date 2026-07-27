@@ -60,6 +60,7 @@ bun create create-betterfactory@latest
 | `--pm <pm>` | `npm` \| `pnpm` \| `yarn` \| `bun` (auto-detect if omitted) |
 | `--skip-install` | Do not run dependency install |
 | `--skip-env` | Do not copy `.env.example` → `.env` |
+| `--no-shell` | Skip opening a shell in a new factory directory after scaffold |
 | `--force` | Overwrite an existing `agent/` tree |
 | `--dry-run` | Compose stack and list files without writing |
 | `--list-modules` | List Module catalog and exit |
@@ -73,14 +74,14 @@ bun create create-betterfactory@latest
 | **Reviewer** | Cold-context review + **Ready for Handoff** gate |
 
 **Tickets:** GitHub Issues (default), Linear, or `tickets/*.md`.  
-**Channels:** eve TUI/HTTP always; optional Slack.  
+**Channels:** eve TUI/HTTP always; optional Slack (auto-runs `eve channels add slack -y` after install).  
 **Install:** new directory or in-place into your Target Repository.
 
-After scaffolding:
+After a **new directory** scaffold on a TTY, the CLI opens a shell **in** the factory package (so you do not need to `cd` yourself). Use `--no-shell` to skip. Type `exit` to leave that shell.
+
+`.env` is already created — add `AI_GATEWAY_API_KEY` (and ticket backend creds), then:
 
 ```bash
-cd my-factory   # or your --package-path
-# .env is already created — add AI_GATEWAY_API_KEY (and ticket backend creds)
 pnpm dev        # or npm run dev / yarn dev / bun run dev
 ```
 

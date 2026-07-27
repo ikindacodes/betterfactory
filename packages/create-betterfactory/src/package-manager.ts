@@ -86,18 +86,16 @@ export async function copyEnvExample(targetDir: string): Promise<boolean> {
 }
 
 /**
- * Run the package manager install in `targetDir`.
- * Streams output to the parent terminal.
+ * Run a command in `cwd`, streaming stdio to the parent terminal.
  */
-export function runDependencyInstall(
-  targetDir: string,
-  pm: PackageManager,
+export function runInDirectory(
+  cwd: string,
+  command: string,
+  args: string[],
 ): Promise<void> {
-  const { command, args } = installCommand(pm);
-
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
-      cwd: targetDir,
+      cwd,
       stdio: "inherit",
       shell: process.platform === "win32",
       env: process.env,
@@ -106,14 +104,80 @@ export function runDependencyInstall(
     child.on("error", (err) => {
       reject(
         new Error(
-          `Failed to start ${command}: ${err.message}. Install ${pm} or re-run with --pm npm.`,
+          `Failed to start ${command}: ${err.message}`,
         ),
       );
     });
 
     child.on("close", (code) => {
       if (code === 0) resolve();
-      else reject(new Error(`${command} ${args.join(" ")} exited with code ${code}`));
+      else
+        reject(
+          new Error(`${command} ${args.join(" ")} exited with code ${code}`),
+        );
     });
+  });
+}
+
+/**
+ * Run the package manager install in `targetDir`.
+ * Streams output to the parent terminal.
+ */
+export function runDependencyInstall(
+  targetDir: string,
+  pm: PackageManager,
+): Promise<void> {
+  const { command, args } = installCommand(pm);
+  return runInDirectory(targetDir, command, args).catch((err) => {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      message.includes("Failed to start")
+        ? `Failed to start ${command}: ${message}. Install ${pm} or re-run with --pm npm.`
+        : message,
+    );
+  });
+}
+
+/**
+ * Scaffold Slack channel via eve (non-interactive). Requires deps installed
+ * so local `eve` is available through the package's node_modules / npx.
+ */
+export function runEveAddSlackChannel(targetDir: string): Promise<void> {
+  return runInDirectory(targetDir, "npx", [
+    "--no-install",
+    "eve",
+    "channels",
+    "add",
+    "slack",
+    "-y",
+  ]).catch(() =>
+    // Fallback: allow npx to resolve eve if pathing differs
+    runInDirectory(targetDir, "npx", ["eve", "channels", "add", "slack", "-y"]),
+  );
+}
+
+/**
+ * Open an interactive shell in `cwd` (cannot change the parent shell's
+ * working directory — a nested shell is the portable workaround).
+ * Resolves when the user exits the shell.
+ */
+export function openShellInDirectory(cwd: string): Promise<number> {
+  const shell =
+    process.env.SHELL ||
+    (process.platform === "win32" ? process.env.COMSPEC || "cmd.exe" : "/bin/sh");
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(shell, [], {
+      cwd,
+      stdio: "inherit",
+      env: {
+        ...process.env,
+        // Hint for shell prompts / tooling that we landed here via scaffold
+        BETTERFACTORY_ROOT: cwd,
+      },
+    });
+
+    child.on("error", reject);
+    child.on("close", (code) => resolve(code ?? 0));
   });
 }
