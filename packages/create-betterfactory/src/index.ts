@@ -25,6 +25,8 @@ export type {
   PackageManagerId,
 } from "./modules/types.js";
 
+export { DEFAULT_MODEL, isModelId } from "./modules/types.js";
+
 export {
   WORK_ITEM_FIELDS,
   WORK_ITEM_MARKDOWN_TEMPLATE,

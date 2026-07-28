@@ -1,5 +1,11 @@
 import type { ModuleRecipe } from "../types.js";
+import { DEFAULT_MODEL } from "../types.js";
 import { DEFINITION_OF_READY_CHECKLIST } from "../work-item.js";
+
+function resolveModel(stack: { model?: string }): string {
+  const m = stack.model?.trim();
+  return m && m.length > 0 ? m : DEFAULT_MODEL;
+}
 
 const dorList = DEFINITION_OF_READY_CHECKLIST.map((c) => `- [ ] ${c}`).join(
   "\n",
@@ -144,6 +150,7 @@ This factory turns intent into **tickets** (not application code) and gates them
 
 - **Tickets:** \`${stack.tickets}\`
 - **Channels:** ${stack.channels.map((c) => `\`${c}\``).join(", ")}
+- **Model:** \`${resolveModel(stack)}\` (AI Gateway — set \`AI_GATEWAY_API_KEY\` in \`.env\`)
 
 ## Quick start
 
@@ -159,10 +166,10 @@ pnpm dev       # or: npm run dev / yarn dev / bun run dev
 You own this code. betterfactory only scaffolded it (MIT). Relicense with your Target Repository as you like.
 `,
 
-    "agent/agent.ts": `import { defineAgent } from "eve";
+    "agent/agent.ts": ({ stack }) => `import { defineAgent } from "eve";
 
 export default defineAgent({
-  model: "anthropic/claude-sonnet-5",
+  model: ${JSON.stringify(resolveModel(stack))},
 });
 `,
 
@@ -211,12 +218,12 @@ export default eveChannel({
     "agent/subagents/planner/skills/check-ready-for-handoff.md": checkReadyForHandoffSkill,
     "agent/subagents/reviewer/skills/check-ready-for-handoff.md": checkReadyForHandoffSkill,
 
-    "agent/subagents/planner/agent.ts": `import { defineAgent } from "eve";
+    "agent/subagents/planner/agent.ts": ({ stack }) => `import { defineAgent } from "eve";
 
 export default defineAgent({
   description:
     "Plans by writing tickets: breakdown, structure, acceptance criteria, and filing. Ships tickets — not application code.",
-  model: "anthropic/claude-sonnet-5",
+  model: ${JSON.stringify(resolveModel(stack))},
 });
 `,
 
@@ -246,12 +253,12 @@ Leave Ready for Handoff false for Reviewer unless the user explicitly wants a dr
 - Ship tickets only — humans and Coding Agents execute application code.
 `,
 
-    "agent/subagents/reviewer/agent.ts": `import { defineAgent } from "eve";
+    "agent/subagents/reviewer/agent.ts": ({ stack }) => `import { defineAgent } from "eve";
 
 export default defineAgent({
   description:
     "Reviews tickets cold against Ready for Handoff. Comments and gates readiness; Planner rewrites bodies.",
-  model: "anthropic/claude-sonnet-5",
+  model: ${JSON.stringify(resolveModel(stack))},
 });
 `,
 

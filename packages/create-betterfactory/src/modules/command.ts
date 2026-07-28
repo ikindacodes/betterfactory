@@ -1,4 +1,5 @@
 import type { StackConfig } from "./types.js";
+import { DEFAULT_MODEL } from "./types.js";
 
 export type PackageManager = "npm" | "pnpm" | "bun" | "yarn";
 
@@ -83,6 +84,14 @@ export function buildCreateCommand(
     parts.push("--pm", options.packageManager);
   } else if (stack.packageManager) {
     parts.push("--pm", stack.packageManager);
+  }
+
+  const model = stack.model?.trim();
+  if (model) {
+    // Always emit when set so Stack Builder / -y commands stay faithful
+    parts.push("--model", shellQuote(model));
+  } else if (nonInteractive) {
+    parts.push("--model", shellQuote(DEFAULT_MODEL));
   }
 
   return parts.join(" ");

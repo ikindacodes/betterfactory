@@ -26,6 +26,9 @@ npx create-betterfactory@latest my-factory -y --pm pnpm
 # or
 pnpm create betterfactory@latest my-factory -y
 
+# Pick an AI Gateway model (wired into Root / Planner / Reviewer)
+npx create-betterfactory@latest my-factory -y --model openai/gpt-5.4
+
 # Markdown tickets, dry-run (print files only — no write/install)
 npx create-betterfactory@latest my-factory -y --tickets markdown --dry-run
 
@@ -58,6 +61,7 @@ bun create create-betterfactory@latest
 | `--install <mode>` | Scaffold mode: `new` (default) or `in-place` |
 | `--package-path <path>` | Path for in-place install (default `apps/<name>`) |
 | `--pm <pm>` | `npm` \| `pnpm` \| `yarn` \| `bun` (auto-detect if omitted) |
+| `--model <model>` | AI Gateway model for Root/Planner/Reviewer (`provider/model`, default `xai/grok-4.5`) |
 | `--skip-install` | Do not run dependency install |
 | `--skip-env` | Do not copy `.env.example` → `.env` |
 | `--no-shell` | Skip opening a shell in a new factory directory after scaffold |

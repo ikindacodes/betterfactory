@@ -10,6 +10,18 @@ export type InstallMode = "new" | "in-place";
 
 export type PackageManagerId = "npm" | "pnpm" | "bun" | "yarn";
 
+/**
+ * Default default model for Root / Planner / Reviewer.
+ * AI Gateway `provider/model` slug — must be available via AI_GATEWAY_API_KEY.
+ * @see https://vercel.com/docs/ai-gateway
+ */
+export const DEFAULT_MODEL = "xai/grok-4.5";
+
+/** Validate AI Gateway-style `provider/model` slugs. */
+export function isModelId(value: string): boolean {
+  return /^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*$/i.test(value.trim());
+}
+
 export interface StackConfig {
   /** Package / directory name for the factory. */
   name: string;
@@ -22,6 +34,11 @@ export interface StackConfig {
   packagePath?: string;
   /** Preferred package manager for post-scaffold install. */
   packageManager?: PackageManagerId;
+  /**
+   * AI Gateway model for Root, Planner, and Reviewer (`provider/model`).
+   * Defaults to {@link DEFAULT_MODEL} when omitted.
+   */
+  model?: string;
 }
 
 export interface ComposeContext {

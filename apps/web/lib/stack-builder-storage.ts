@@ -3,6 +3,7 @@ import type {
   PackageManager,
   TicketsId,
 } from "create-betterfactory/modules"
+import { DEFAULT_MODEL, isModelId } from "create-betterfactory/modules"
 
 export const STACK_BUILDER_STORAGE_KEY = "betterfactory.stack-builder.v1"
 
@@ -13,6 +14,8 @@ export type StackBuilderSelections = {
   tickets: TicketsId
   slack: boolean
   pm: PackageManager
+  /** AI Gateway `provider/model` for Root / Planner / Reviewer. */
+  model: string
 }
 
 export const DEFAULT_STACK_SELECTIONS: StackBuilderSelections = {
@@ -22,6 +25,7 @@ export const DEFAULT_STACK_SELECTIONS: StackBuilderSelections = {
   tickets: "github",
   slack: false,
   pm: "npm",
+  model: DEFAULT_MODEL,
 }
 
 const INSTALL_MODES = new Set<InstallMode>(["new", "in-place"])
@@ -76,6 +80,8 @@ export function parseStackSelections(raw: unknown): StackBuilderSelections {
     sanitizeFactoryNameInput(asString(o.name, DEFAULT_STACK_SELECTIONS.name)) ||
     DEFAULT_STACK_SELECTIONS.name
 
+  const modelRaw = asString(o.model, DEFAULT_STACK_SELECTIONS.model).trim()
+
   return {
     name,
     installMode:
@@ -94,6 +100,7 @@ export function parseStackSelections(raw: unknown): StackBuilderSelections {
       typeof pm === "string" && PMS.has(pm as PackageManager)
         ? (pm as PackageManager)
         : DEFAULT_STACK_SELECTIONS.pm,
+    model: isModelId(modelRaw) ? modelRaw : DEFAULT_STACK_SELECTIONS.model,
   }
 }
 

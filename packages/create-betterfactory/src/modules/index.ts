@@ -10,6 +10,8 @@ export type {
   WorkItemStoreId,
 } from "./types.js";
 
+export { DEFAULT_MODEL, isModelId } from "./types.js";
+
 export {
   WORK_ITEM_FIELDS,
   WORK_ITEM_MARKDOWN_TEMPLATE,

@@ -6,6 +6,7 @@ import type {
   StackConfig,
   TicketsId,
 } from "./modules/types.js";
+import { DEFAULT_MODEL, isModelId } from "./modules/types.js";
 import {
   detectPackageManager,
   type PackageManager,
@@ -24,6 +25,8 @@ export interface WizardFlags {
   runInstall?: boolean;
   /** Prompt for package manager in interactive mode. */
   askPackageManager?: boolean;
+  /** AI Gateway model slug (`provider/model`). */
+  model?: string;
 }
 
 function assertNotCancel<T>(value: T | symbol): T {
@@ -53,6 +56,7 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
       channels,
       packagePath: flags.packagePath,
       packageManager: detected,
+      model: flags.model?.trim() || DEFAULT_MODEL,
     };
   }
 
@@ -162,6 +166,19 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
     );
   }
 
+  const model = assertNotCancel(
+    await p.text({
+      message: "Default model (AI Gateway provider/model)",
+      placeholder: DEFAULT_MODEL,
+      initialValue: flags.model?.trim() || DEFAULT_MODEL,
+      validate: (v) => {
+        if (!v || !isModelId(v)) {
+          return "Use a provider/model slug (e.g. xai/grok-4.5)";
+        }
+      },
+    }),
+  );
+
   return {
     name,
     installMode,
@@ -169,5 +186,6 @@ export async function runWizard(flags: WizardFlags): Promise<StackConfig> {
     channels,
     packagePath,
     packageManager,
+    model: model.trim(),
   };
 }

@@ -9,6 +9,7 @@ import {
   type StackConfig,
   type TicketsId,
 } from "create-betterfactory/modules"
+import { ModelPicker } from "@/components/model-picker"
 import { SiteHeader } from "@/components/site-header"
 import { StackPreviewTree } from "@/components/stack-preview-tree"
 import {
@@ -109,7 +110,8 @@ export function StackBuilder() {
     }
   }, [])
 
-  const { name, installMode, packagePath, tickets, slack, pm } = selections
+  const { name, installMode, packagePath, tickets, slack, pm, model } =
+    selections
 
   function patch(partial: Partial<StackBuilderSelections>) {
     setSelections((prev) => ({ ...prev, ...partial }))
@@ -131,8 +133,9 @@ export function StackBuilder() {
       tickets,
       channels,
       packagePath: installMode === "in-place" ? packagePath : undefined,
+      model,
     }
-  }, [name, installMode, packagePath, tickets, slack])
+  }, [name, installMode, packagePath, tickets, slack, model])
 
   const command = useMemo(
     () => buildCreateCommand(stack, { packageManager: pm }),
@@ -177,8 +180,8 @@ export function StackBuilder() {
           <AlertDialogTitle>Reset selections?</AlertDialogTitle>
           <AlertDialogDescription>
             This clears your saved Stack Builder choices in this browser and
-            restores the defaults (name, package manager, install mode, tickets,
-            and channels).
+            restores the defaults (name, package manager, model, install mode,
+            tickets, and channels).
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -259,6 +262,15 @@ export function StackBuilder() {
                     </ToggleGroupItem>
                   ))}
                 </ToggleGroup>
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="default-model">Default model</FieldLabel>
+                <ModelPicker
+                  id="default-model"
+                  value={model}
+                  onValueChange={(next) => patch({ model: next })}
+                />
               </Field>
 
               <FieldSet className="gap-3">

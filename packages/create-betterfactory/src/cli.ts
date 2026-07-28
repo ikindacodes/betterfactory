@@ -6,6 +6,7 @@ import path from "node:path";
 import {
   listCatalog,
   composeStack,
+  isModelId,
   type TicketsId,
   type InstallMode,
 } from "./modules/index.js";
@@ -53,6 +54,10 @@ program
   .option(
     "--pm <pm>",
     "Package manager: npm | pnpm | yarn | bun (default: auto-detect from pnpm/yarn/bun create)",
+  )
+  .option(
+    "--model <model>",
+    "AI Gateway model for Root/Planner/Reviewer (provider/model)",
   )
   .option(
     "--skip-install",
@@ -107,6 +112,17 @@ program
       process.exit(1);
     }
 
+    const modelFlag =
+      opts.model != null && String(opts.model).trim() !== ""
+        ? String(opts.model).trim()
+        : undefined;
+    if (modelFlag != null && !isModelId(modelFlag)) {
+      console.error(
+        `Invalid --model: ${modelFlag}. Use provider/model (e.g. xai/grok-4.5).`,
+      );
+      process.exit(1);
+    }
+
     const flags: WizardFlags = {
       name,
       yes: Boolean(opts.yes),
@@ -118,6 +134,7 @@ program
       packageManager: opts.pm as PackageManager | undefined,
       runInstall: !opts.skipInstall,
       askPackageManager: !opts.skipInstall && opts.pm == null && !opts.yes,
+      model: modelFlag,
     };
 
     try {
