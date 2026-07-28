@@ -23,11 +23,18 @@ export function SiteHeader({ actions, className }: SiteHeaderProps) {
     >
       <h1
         className={cn(
-          "text-base font-normal tracking-wide",
+          "flex min-w-0 items-center gap-2 text-base font-normal tracking-wide",
           "[font-family:var(--font-geist-pixel-square),var(--font-mono),ui-monospace,monospace]",
         )}
       >
-        {SITE.name}
+        <span className="shrink-0">{SITE.name}</span>
+        <span
+          className="text-muted-foreground shrink-0 select-none"
+          aria-hidden
+        >
+          /
+        </span>
+        <span className="text-muted-foreground truncate">{SITE.tagline}</span>
       </h1>
 
       <div className="flex items-center gap-1">
